@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  {% load static %}
+<title>Admin — Snai3i</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="{% static 'core/icons/favicon.ico' %}" sizes="any" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--primary:#F2A807;--ph:#d99206;--navy:#1F1F38;--muted:#6b7280;--border:#e5e7eb;--bg:#f9f9fb;--card:#fff;--red:#ef4444;--green:#10b981;--r:4px}
+    body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--navy);min-height:100vh}
+
+    /* NAV */
+    .nav{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+    .nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand img{height:30px}
+    .dv{width:1px;height:18px;background:var(--border)}
+    .brand-title{font-weight:800;font-size:13px}
+    .badge-admin{background:rgba(239,68,68,.1);color:#dc2626;font-size:10px;font-weight:900;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px}
+    .nav-r{display:flex;align-items:center;gap:12px}
+    .av{width:34px;height:34px;border-radius:50%;background:#dc2626;color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center}
+    .uname{font-size:13px;font-weight:700}
+    .so-btn{display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;text-decoration:none;transition:.15s}
+    .so-btn:hover{color:var(--red);background:rgba(239,68,68,.06);border-color:var(--red)}
+
+    /* LAYOUT */
+    .main{max-width:1200px;margin:0 auto;padding:36px 24px 60px}
+    .ph{margin-bottom:28px}
+    .ph h1{font-size:22px;font-weight:900}
+    .ph p{font-size:13px;color:var(--muted);margin-top:3px}
+
+    /* STATS */
+    .sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:28px}
+    .sc{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px}
+    .sl{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    .sv{font-size:28px;font-weight:900;color:var(--navy)}
+    .sv.a{color:var(--primary)} .sv.g{color:var(--green)} .sv.r{color:#dc2626}
+
+    /* TABS */
+    .tabs{display:flex;gap:4px;background:#f3f4f6;border:1px solid var(--border);border-radius:8px;padding:4px;width:fit-content;margin-bottom:20px}
+    .tab-btn{padding:8px 20px;border:none;border-radius:6px;background:transparent;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s}
+    .tab-btn.active{background:var(--primary);color:#fff}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    /* TOOLBAR */
+    .toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+    .fi{padding:9px 14px;border:1px solid var(--border);border-radius:var(--r);font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:var(--navy);outline:none;min-width:200px;background:#fff}
+    .fi:focus{border-color:var(--primary)}
+    .rc{font-size:12px;color:var(--muted);font-weight:700;margin-left:auto}
+    .add-btn{display:flex;align-items:center;gap:7px;background:var(--primary);color:#fff;border:none;border-radius:999px;padding:10px 20px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:.15s;box-shadow:0 2px 10px rgba(242,168,7,.3);white-space:nowrap}
+    .add-btn:hover{background:var(--ph)}
+
+    /* TABLE */
+    .tc{background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 8px rgba(0,0,0,.04);overflow:hidden}
+    .sh,.sr{display:grid;grid-template-columns:48px 1.8fr 80px 80px 1fr 90px;gap:12px;align-items:center}
+    .th,.tr{display:grid;grid-template-columns:1.6fr 1.8fr 1fr 100px 70px;gap:12px;align-items:center}
+    .hrow{padding:12px 16px;background:#f9f9fb;border-bottom:1px solid var(--border);font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+    .drow{padding:13px 16px;border-bottom:1px solid var(--border);transition:background .12s}
+    .drow:last-child{border-bottom:none}
+    .drow:hover{background:#fafafa}
+    .drow.hidden{display:none}
+    .cc{text-align:center}
+    .rc-cell{display:flex;align-items:center;justify-content:center}
+    .rb{width:34px;height:34px;border-radius:8px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--muted)}
+    .rb.gold{background:rgba(234,179,8,.15);color:#a16207}
+    .rb.silver{background:rgba(156,163,175,.25);color:#4b5563}
+    .rb.bronze{background:rgba(180,120,80,.2);color:#92400e}
+    .pname{font-weight:800;font-size:13px;color:var(--navy)}
+    .psub{font-size:11px;color:var(--muted);margin-top:1px}
+    .pv{font-weight:800;font-size:14px;color:var(--primary)}
+    .cv{font-weight:800;font-size:14px;color:#ca8a04}
+    .mv{font-size:12px;color:var(--muted)}
+    .pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800;background:rgba(242,168,7,.1);color:#92400e;white-space:nowrap}
+    .tav{width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .ac{display:flex;align-items:center;justify-content:flex-end;gap:4px}
+    .ib{width:32px;height:32px;border-radius:6px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:.12s}
+    .ib:hover{background:#f3f4f6;color:var(--navy)}
+    .ib.del:hover{background:rgba(239,68,68,.08);color:var(--red)}
+    .empty{padding:64px 24px;text-align:center;color:var(--muted);font-size:14px}
+
+    /* MODAL */
+    .mo{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;opacity:0;pointer-events:none;transition:opacity .2s}
+    .mo.open{opacity:1;pointer-events:all}
+    .md{background:#fff;border-radius:12px;padding:32px 28px;width:100%;max-width:420px;box-shadow:0 16px 48px rgba(0,0,0,.18);transform:scale(.95);transition:transform .2s}
+    .mo.open .md{transform:scale(1)}
+    .md h2{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:20px}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+    .field input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);font-family:'Montserrat',sans-serif;font-size:14px;color:var(--navy);outline:none}
+    .field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(242,168,7,.1)}
+    .mf{display:flex;gap:10px;margin-top:20px}
+    .bc{flex:1;padding:11px;background:#f3f4f6;color:var(--navy);border:none;border-radius:999px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+    .bc:hover{background:#e5e7eb}
+    .bk{flex:1;padding:11px;background:var(--primary);color:#fff;border:none;border-radius:999px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:800;cursor:pointer}
+    .bk:hover{background:var(--ph)}
+
+    /* TOAST */
+    .tw{position:fixed;bottom:28px;right:28px;display:flex;flex-direction:column;gap:10px;z-index:9999}
+    .toast{background:#fff;border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:240px;animation:sli .25s ease;transition:opacity .3s}
+    .tt{font-weight:800;font-size:14px;color:var(--navy)}
+    .td{font-size:12px;color:var(--muted);margin-top:3px}
+    @keyframes sli{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+    @media (max-width: 900px) {
+      .nav-inner{padding:0 16px}
+      .main{padding:24px 16px 48px}
+      .toolbar .fi{min-width:0;flex:1}
+      .toolbar .rc{margin-left:0;width:100%}
+      .add-btn{width:100%;justify-content:center}
+
+      .hrow{display:none}
+      .sh,.sr,.th,.tr{
+        display:flex;flex-direction:column;gap:10px;
+        grid-template-columns:none;padding:16px;
+      }
+      .sr [data-label]::before,.tr [data-label]::before{
+        content:attr(data-label);display:block;
+        font-size:11px;font-weight:800;color:var(--muted);
+        text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;
+      }
+      .rc-cell{justify-content:flex-start}
+      .ac{justify-content:flex-start}
+    }
+
+    @media (max-width: 480px) {
+      .brand-title, .badge-admin, .dv, .uname { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <img src="{% static 'core/img/logo.svg' %}" alt="Snai3i"/>
+      <div class="dv"></div>
+      <span class="brand-title">Admin Panel</span>
+      <span class="badge-admin">Admin</span>
+    </div>
+    <div class="nav-r">
+      <div class="av">A</div>
+      <span class="uname">{{ request.user.first_name }} {{ request.user.last_name }}</span>
+      <a href="{% url 'signout' %}" class="so-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="ph"><h1>Admin Panel</h1><p>Manage teachers, classrooms and students</p></div>
+
+  <!-- STATS -->
+  <div class="sg">
+    <div class="sc"><div class="sl">Students</div><div class="sv">{{ total_students }}</div></div>
+    <div class="sc"><div class="sl">Teachers</div><div class="sv r">{{ total_teachers }}</div></div>
+    <div class="sc"><div class="sl">Classrooms</div><div class="sv">{{ total_classrooms }}</div></div>
+    <div class="sc"><div class="sl">Total Points</div><div class="sv a">{{ total_points }}</div></div>
+    <div class="sc"><div class="sl">Total Coins</div><div class="sv g">{{ total_coins }}</div></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('students',this)">All Students</button>
+    <button class="tab-btn"       onclick="switchTab('teachers',this)">Teachers</button>
+  </div>
+
+  <!-- ══ STUDENTS TAB ══ -->
+  <div class="tab-panel active" id="tab-students">
+    <div class="toolbar">
+      <input class="fi" type="text" id="ss" placeholder="Search students…" oninput="filterS()"/>
+      <select class="fi" id="cf" style="min-width:180px" onchange="filterS()">
+        <option value="">All Classrooms</option>
+        {% for c in classrooms %}<option value="{{ c.name }}">{{ c.name }}</option>{% endfor %}
+      </select>
+      <span class="rc" id="sc-count">{{ total_students }} students</span>
+    </div>
+    <div class="tc">
+      <div class="sh hrow">
+        <div class="cc">Rank</div><div>Student</div><div>Points</div><div>Coins</div><div>Teacher</div><div>Classroom</div>
+      </div>
+      <div id="student-list">
+        {% for entry in students %}
+        <div class="sr drow" data-name="{{ entry.student.user.first_name }} {{ entry.student.user.last_name }}" data-classroom="{{ entry.classroom_name }}">
+          <div class="rc-cell">
+            <div class="rb {% if forloop.counter == 1 %}gold{% elif forloop.counter == 2 %}silver{% elif forloop.counter == 3 %}bronze{% endif %}">{{ forloop.counter }}</div>
+          </div>
+          <div>
+            <div class="pname">{{ entry.student.user.first_name }} {{ entry.student.user.last_name }}</div>
+            <div class="psub">{{ entry.student.user.email }}{% if entry.student.age %} · Age {{ entry.student.age }}{% endif %}</div>
+          </div>
+          <div class="pv" data-label="Points">{{ entry.student.points }}</div>
+          <div class="cv" data-label="Coins">{{ entry.student.coins }}</div>
+          <div class="mv" data-label="Teacher">{{ entry.teacher_name }}</div>
+          <div data-label="Classroom"><span class="pill">{{ entry.classroom_name }}</span></div>
+        </div>
+        {% empty %}<div class="empty">No students yet.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TEACHERS TAB ══ -->
+  <div class="tab-panel" id="tab-teachers">
+    <div class="toolbar">
+      <input class="fi" type="text" id="ts" placeholder="Search teachers…" oninput="filterT()"/>
+      <button class="add-btn" style="margin-left:auto" onclick="openModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Teacher
+      </button>
+    </div>
+    <div class="tc">
+      <div class="th hrow">
+        <div>Teacher</div><div>Email</div><div>Classes</div><div>Students</div><div class="cc">Actions</div>
+      </div>
+      <div id="teacher-list">
+        {% for teacher in teachers %}
+        <div class="tr drow" id="tr-{{ teacher.id }}" data-name="{{ teacher.user.first_name }} {{ teacher.user.last_name }}">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="tav">{{ teacher.user.first_name|slice:":1" }}{{ teacher.user.last_name|slice:":1" }}</div>
+            <div>
+              <div class="pname">{{ teacher.user.first_name }} {{ teacher.user.last_name }}</div>
+            </div>
+          </div>
+          <div class="mv" data-label="Email">{{ teacher.user.email }}</div>
+          <div data-label="Classes">
+            {% for cls in teacher.classroom_set.all %}
+              <span class="pill" style="display:inline-block;margin:2px 4px 2px 0;">{{ cls.name }}</span>
+            {% empty %}
+              <span class="mv">—</span>
+            {% endfor %}
+          </div>
+          <div class="pv" data-label="Students">
+            {% with total=0 %}
+              {% for cls in teacher.classroom_set.all %}{{ cls.students.count }}{% if not forloop.last %}, {% endif %}{% empty %}0{% endfor %}
+            {% endwith %}
+          </div>
+          <div class="ac" style="display:flex;align-items:center;gap:6px;">
+            <button class="ib" title="Edit teacher info" style="background:#fff;border:1px solid var(--border);color:var(--navy);border-radius:6px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="openEditTeacherModal({{ teacher.id }}, '{{ teacher.user.first_name|escapejs }}', '{{ teacher.user.last_name|escapejs }}', '{{ teacher.user.email|escapejs }}', '{% with c=teacher.classroom_set.first %}{{ c.name|default:""|escapejs }}{% endwith %}')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="ib del" title="Delete teacher" onclick="deleteTeacher({{ teacher.id }},'{{ teacher.user.first_name }} {{ teacher.user.last_name }}')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+        </div>
+        {% empty %}<div class="empty">No teachers yet — click Add Teacher to get started.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ADD TEACHER MODAL -->
+<div class="mo" id="mo" onclick="handleOC(event)">
+  <div class="md">
+    <h2>Add New Teacher</h2>
+    <div class="field"><label>First Name</label><input type="text" id="t-first" placeholder="First name"/></div>
+    <div class="field"><label>Last Name</label><input type="text" id="t-last" placeholder="Last name"/></div>
+    <div class="field"><label>Email</label><input type="email" id="t-email" placeholder="teacher@email.com"/></div>
+    <div class="field"><label>Password</label><input type="password" id="t-pw" placeholder="Set a password"/></div>
+    <div class="field"><label>Classroom Name</label><input type="text" id="t-cls" value="My Class" placeholder="e.g. Class 3A"/></div>
+    <div class="mf">
+      <button class="bc" onclick="closeModal()">Cancel</button>
+      <button class="bk" onclick="confirmAdd()">Add Teacher</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TEACHER MODAL -->
+<div class="mo" id="edit-mo" onclick="handleEditOC(event)">
+  <div class="md">
+    <h2>Edit Teacher Info</h2>
+    <input type="hidden" id="et-id"/>
+    <div class="field"><label>First Name</label><input type="text" id="et-first" placeholder="First name"/></div>
+    <div class="field"><label>Last Name</label><input type="text" id="et-last" placeholder="Last name"/></div>
+    <div class="field"><label>Email</label><input type="email" id="et-email" placeholder="teacher@email.com"/></div>
+    <div class="field"><label>New Password (optional)</label><input type="password" id="et-pw" placeholder="Leave empty to keep current password"/></div>
+    <div class="field"><label>Classroom Name</label><input type="text" id="et-cls" placeholder="e.g. Class 3A"/></div>
+    <div class="mf">
+      <button class="bc" onclick="closeEditModal()">Cancel</button>
+      <button class="bk" onclick="confirmEditTeacher()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="tw" id="tw"></div>
+
+<script>
+function switchTab(n,b){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');
+}
+function filterS(){
+  const s=document.getElementById('ss').value.toLowerCase();
+  const c=document.getElementById('cf').value.toLowerCase();
+  let n=0;
+  document.querySelectorAll('#student-list .sr').forEach(r=>{
+    const ok=r.dataset.name.toLowerCase().includes(s)&&(c===''||r.dataset.classroom.toLowerCase()===c);
+    r.classList.toggle('hidden',!ok);if(ok)n++;
+  });
+  document.getElementById('sc-count').textContent=n+' student'+(n!==1?'s':'');
+}
+function filterT(){
+  const s=document.getElementById('ts').value.toLowerCase();
+  document.querySelectorAll('#teacher-list .tr').forEach(r=>r.classList.toggle('hidden',!r.dataset.name.toLowerCase().includes(s)));
+}
+function csrf(){
+  const m=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='));
+  return m?decodeURIComponent(m.split('=')[1]):'';
+}
+function openModal(){
+  ['t-first','t-last','t-email','t-pw'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('t-cls').value='My Class';
+  document.getElementById('mo').classList.add('open');
+  document.getElementById('t-first').focus();
+}
+function closeModal(){document.getElementById('mo').classList.remove('open');}
+function handleOC(e){if(e.target===document.getElementById('mo'))closeModal();}
+
+function openEditTeacherModal(id, first, last, email, cls){
+  document.getElementById('et-id').value = id;
+  document.getElementById('et-first').value = first;
+  document.getElementById('et-last').value = last;
+  document.getElementById('et-email').value = email;
+  document.getElementById('et-pw').value = '';
+  document.getElementById('et-cls').value = cls;
+  document.getElementById('edit-mo').classList.add('open');
+  document.getElementById('et-first').focus();
+}
+function closeEditModal(){document.getElementById('edit-mo').classList.remove('open');}
+function handleEditOC(e){if(e.target===document.getElementById('edit-mo'))closeEditModal();}
+
+function confirmEditTeacher(){
+  const id=document.getElementById('et-id').value;
+  const first=document.getElementById('et-first').value.trim();
+  const last=document.getElementById('et-last').value.trim();
+  const email=document.getElementById('et-email').value.trim();
+  const pw=document.getElementById('et-pw').value.trim();
+  const cls=document.getElementById('et-cls').value.trim();
+  if(!first||!email){toast('Incomplete','First name and email are required.');return;}
+  fetch('/update-teacher/'+id+'/',{
+    method:'POST',
+    headers:{'X-CSRFToken':csrf(),'Content-Type':'application/json'},
+    body:JSON.stringify({first_name:first,last_name:last,email,password:pw,classroom_name:cls}),
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){closeEditModal();toast('Updated','Teacher info updated.');setTimeout(()=>location.reload(),1000);}
+    else toast('Error',d.error||'Failed.');
+  }).catch(()=>toast('Error','Network error.'));
+}
+
+function confirmAdd(){
+  const first=document.getElementById('t-first').value.trim();
+  const last=document.getElementById('t-last').value.trim();
+  const email=document.getElementById('t-email').value.trim();
+  const pw=document.getElementById('t-pw').value.trim();
+  const cls=document.getElementById('t-cls').value.trim();
+  if(!first||!email||!pw){toast('Incomplete','First name, email and password are required.');return;}
+  fetch('/add-teacher/',{
+    method:'POST',
+    headers:{'X-CSRFToken':csrf(),'Content-Type':'application/json'},
+    body:JSON.stringify({first_name:first,last_name:last,email,password:pw,classroom_name:cls}),
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){closeModal();toast('Added',d.name+' added as teacher.');setTimeout(()=>location.reload(),1200);}
+    else toast('Error',d.error||'Failed.');
+  }).catch(()=>toast('Error','Network error.'));
+}
+function deleteTeacher(id,name){
+  if(!confirm('Delete teacher '+name+' and their classroom?'))return;
+  fetch('/delete-teacher/'+id+'/',{
+    method:'POST',headers:{'X-CSRFToken':csrf(),'Content-Type':'application/json'},
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){document.getElementById('tr-'+id).remove();toast('Deleted',name+' removed.');}
+    else toast('Error',d.error||'Failed.');
+  }).catch(()=>toast('Error','Network error.'));
+}
+function toast(title,desc){
+  const w=document.getElementById('tw');
+  const el=document.createElement('div');el.className='toast';
+  el.innerHTML='<div class="tt">'+title+'</div><div class="td">'+desc+'</div>';
+  w.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),300);},2800);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeModal();closeEditModal();}
+  if(e.key==='Enter'&&document.getElementById('mo').classList.contains('open'))confirmAdd();
+  if(e.key==='Enter'&&document.getElementById('edit-mo').classList.contains('open'))confirmEditTeacher();
+});
+</script>
+</body>
+</html>

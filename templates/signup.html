@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  {% load static %}
+  <title>Sign Up — Snai3i Points Tracker</title>
+  <meta name="description" content="Create your Snai3i Points Tracker account for gamified classroom points, coins, homework and rewards." />
+  <meta name="robots" content="index, follow" />
+  <link rel="icon" href="{% static 'core/icons/favicon.ico' %}" sizes="any" />
+  <link rel="apple-touch-icon" href="{% static 'core/icons/apple-touch-icon.png' %}" />
+  <link rel="manifest" href="{% static 'core/icons/manifest.json' %}" />
+  <meta name="theme-color" content="#1F1F38" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #F2A807;
+      --primary-hover: #d99206;
+      --navy: #1F1F38;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --error: #ef4444;
+      --success: #10b981;
+      --radius: 6px;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f9f9fb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 420px;
+      padding: 40px 36px 32px;
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .logo-wrap img { height: 36px; }
+
+    .divider-v {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+    }
+
+    .brand-label {
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--navy);
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--navy);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      color: var(--navy);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(242,168,7,0.12); }
+
+    .field { margin-bottom: 14px; }
+
+    .submit-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover { background: var(--primary-hover); }
+    .submit-btn:active { transform: scale(0.98); }
+
+    .error-box {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--error);
+      margin-bottom: 16px;
+    }
+
+    .footer-link {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 20px;
+    }
+
+    .footer-link a { color: var(--primary); font-weight: 700; text-decoration: none; }
+
+    @media (max-width: 420px) {
+      body { padding: 12px; }
+      .card { padding: 28px 20px 24px; }
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card"> 
+  <div class="logo-wrap"> 
+    <img src="{% static 'core/img/logo.svg' %}" alt="Snai3i" /> 
+    <div class="divider-v"></div> 
+    <span class="brand-label">Points Tracker</span> 
+  </div> 
+
+  <h1>Create your account</h1> 
+  <p class="subtitle">Join Snai3i and start tracking your students</p> 
+
+  {% if error %}
+    <div class="error-box">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <form method="POST"> 
+    {% csrf_token %}
+
+    <div class="row"> 
+      <div class="field"> 
+        <label>First name</label> 
+        <input type="text" name="first_name" placeholder="First name" required /> 
+      </div> 
+
+      <div class="field"> 
+        <label>Last name</label> 
+        <input type="text" name="last_name" placeholder="Last name" required /> 
+      </div> 
+    </div> 
+
+    <div class="field"> 
+      <label>Email address</label> 
+      <input type="email" name="email" placeholder="teacher@school.com" required /> 
+    </div> 
+
+    <div class="field"> 
+      <label>Password</label> 
+      <input type="password" name="password" placeholder="Create a password" required /> 
+    </div> 
+
+    <div class="field"> 
+      <label>Confirm password</label> 
+      <input type="password" name="confirm_password" placeholder="Repeat your password" required /> 
+    </div> 
+
+    <button type="submit" class="submit-btn"> 
+      Create Account
+    </button> 
+  </form> 
+
+  <p class="footer-link">
+    Already have an account?
+    <a href="/signin/">Sign in</a>
+  </p> 
+</div>
+</body>
+</html>

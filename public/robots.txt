@@ -1,0 +1,15 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /signin/
+Allow: /signup/
+
+# Authenticated / private application areas — no SEO value, keep crawlers out
+Disallow: /dashboard/
+Disallow: /student/
+Disallow: /admin-panel/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /uploads/
+
+Sitemap: https://snai3i-points-tracker.onrender.com/sitemap.xml

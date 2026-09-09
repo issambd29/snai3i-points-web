@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  {% load static %}
+<title>My Class — Snai3i Points Tracker</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="{% static 'core/icons/favicon.ico' %}" sizes="any" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #F2A807;
+      --primary-hover: #d99206;
+      --navy: #1F1F38;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f9f9fb;
+      --card: #ffffff;
+      --destructive: #ef4444;
+      --destructive-hover: #dc2626;
+      --radius: 4px;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg);
+      color: var(--navy);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    .nav {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-brand img { height: 32px; }
+    .divider-v { width: 1px; height: 18px; background: var(--border); }
+    .nav-title { font-weight: 800; font-size: 13px; color: var(--navy); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--primary); color: #fff;
+      font-weight: 800; font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .user-name { font-size: 13px; font-weight: 700; color: var(--navy); }
+
+    .sign-out-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 12px; font-family: 'Montserrat', sans-serif;
+      font-size: 13px; font-weight: 700; color: var(--muted);
+      cursor: pointer; text-decoration: none;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+    }
+    .sign-out-btn:hover { color: var(--destructive); background: rgba(239,68,68,0.06); border-color: var(--destructive); }
+
+    /* MAIN */
+    .main { max-width: 1200px; margin: 0 auto; padding: 36px 24px 60px; }
+
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 16px; margin-bottom: 28px;
+    }
+    .page-header h1 { font-size: 22px; font-weight: 900; color: var(--navy); }
+    .page-header p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    .add-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 999px; padding: 11px 22px;
+      font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800;
+      cursor: pointer; transition: background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 2px 10px rgba(242,168,7,0.35); white-space: nowrap; flex-shrink: 0;
+    }
+    .add-btn:hover { background: var(--primary-hover); box-shadow: 0 4px 14px rgba(242,168,7,0.45); }
+
+    .class-tools {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+    .class-select {
+      min-width: 240px; padding: 10px 38px 10px 14px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: #fff; color: var(--navy);
+      font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700;
+      outline: none; cursor: pointer;
+    }
+    .class-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(242,168,7,0.1); }
+    .share-btn {
+      padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px;
+      background: #fff; color: var(--navy); font-family: 'Montserrat', sans-serif;
+      font-size: 13px; font-weight: 800; cursor: pointer;
+    }
+    .share-btn:hover { border-color: var(--primary); color: var(--primary-hover); }
+    .new-class-btn {
+      padding: 10px 15px; border: 1px dashed var(--primary); border-radius: 8px;
+      background: rgba(242,168,7,0.06); color: var(--primary-hover);
+      font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer;
+    }
+    .new-class-btn:hover { background: rgba(242,168,7,0.13); }
+    .class-count { font-size: 12px; color: var(--muted); }
+    .collab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; }
+    .collab-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: 0 5px 18px rgba(31,31,56,.04); }
+    .collab-card h2 { font-size: 16px; margin-bottom: 14px; }
+    .collab-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .collab-heading h2 { margin-bottom: 0; }
+    .collab-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 999px; background: rgba(242,168,7,.11); color: #a16207; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; }
+    .collab-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--primary); }
+    .homework-card { overflow: hidden; }
+    .homework-summary { display: flex; align-items: center; justify-content: space-between; cursor: pointer; list-style: none; }
+    .homework-summary::-webkit-details-marker { display: none; }
+    .homework-summary::after { content: '+'; color: var(--muted); font-size: 20px; font-weight: 400; }
+    .homework-card[open] .homework-summary::after { content: '−'; }
+    .homework-content { padding-top: 14px; animation: homeworkOpen .18s ease; }
+    @keyframes homeworkOpen { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    .chat-fab { position: fixed; right: 24px; bottom: 24px; width: 54px; height: 54px; border: 0; border-radius: 18px; background: var(--primary); color: #fff; box-shadow: 0 4px 14px rgba(242,168,7,.35); cursor: pointer; z-index: 1100; display: flex; align-items: center; justify-content: center; transition: transform .15s, background .15s; }
+    .chat-fab img { width: 31px; height: 31px; object-fit: contain; filter: brightness(0) invert(1); }
+    .chat-fab:hover { background: var(--primary-hover); }
+    .chat-panel { position: fixed; right: 24px; bottom: 84px; width: min(360px, calc(100vw - 32px)); z-index: 1099; opacity: 0; transform: translateY(10px) scale(.98); pointer-events: none; transition: opacity .18s ease, transform .18s ease; }
+    .chat-panel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    .chat-panel .collab-card { box-shadow: 0 10px 28px rgba(31,31,56,.14); }
+    .chat-close { float: right; border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
+    .chat-close:hover { color: var(--navy); }
+    .homework-item { padding: 13px 0; border-top: 1px solid var(--border); }
+    .homework-item:first-child { border-top: 0; padding-top: 0; }
+    .homework-item strong { font-size: 13px; }
+    .homework-item p { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+    .homework-form input, .homework-form textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 6px; font: 13px Montserrat, sans-serif; margin-bottom: 8px; }
+    .homework-form textarea { resize: vertical; min-height: 58px; }
+    .small-action { border: 0; border-radius: 6px; background: var(--primary); color: #fff; padding: 9px 12px; font: 700 12px Montserrat, sans-serif; cursor: pointer; }
+    .chat-list { height: 190px; overflow-y: auto; border: 1px solid #f0e4c6; background: #fffdf7; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+    .chat-message { font-size: 12px; margin-bottom: 10px; padding: 8px 10px; border-radius: 9px; background: #fff; border: 1px solid #f3ead7; line-height: 1.45; }
+    .chat-message strong { color: var(--navy); }
+    .chat-message span { color: var(--muted); }
+    .chat-form { display: flex; gap: 7px; }
+    .chat-form input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px; font: 13px Montserrat, sans-serif; outline: none; }
+    .chat-form input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(242,168,7,.1); }
+    @media (max-width: 760px) { .collab-grid { grid-template-columns: 1fr; } }
+
+    /* TABS */
+    .tabs {
+      display: flex; gap: 4px;
+      background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px;
+      padding: 4px; width: fit-content; margin-bottom: 20px;
+    }
+    .tab-btn {
+      padding: 8px 20px; border: none; border-radius: 6px;
+      background: transparent; font-family: 'Montserrat', sans-serif;
+      font-size: 13px; font-weight: 700; color: var(--muted);
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    .tab-btn.active { background: var(--primary); color: #fff; }
+
+    /* TABLE */
+    .table-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; box-shadow: 0 1px 8px rgba(0,0,0,0.04); overflow: hidden;
+    }
+
+    /* 7 columns: rank | student | pts | coins | add pts | subtract pts | actions */
+    .table-head,
+    .table-row {
+      display: grid;
+      grid-template-columns: 52px 1.6fr 80px 80px 180px 180px 80px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .table-head {
+      padding: 12px 16px;
+      background: #f9f9fb;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .table-row {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    .table-row:last-child { border-bottom: none; }
+    .table-row:hover { background: #fafafa; }
+
+    @keyframes flash-add {
+      0%   { background: rgba(242,168,7,0.18); }
+      100% { background: transparent; }
+    }
+    @keyframes flash-sub {
+      0%   { background: rgba(239,68,68,0.12); }
+      100% { background: transparent; }
+    }
+    .table-row.flash-add { animation: flash-add 0.7s ease; }
+    .table-row.flash-sub { animation: flash-sub 0.7s ease; }
+
+    .col-center { text-align: center; }
+
+    .rank-cell { display: flex; align-items: center; justify-content: center; }
+    .rank-box {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: #f3f4f6; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px; color: var(--muted);
+    }
+    .rank-box.gold   { background: rgba(234,179,8,0.15);  color: #a16207; }
+    .rank-box.silver { background: rgba(156,163,175,0.25); color: #4b5563; }
+    .rank-box.bronze { background: rgba(180,120,80,0.2);  color: #92400e; }
+
+    .player-name { font-weight: 800; font-size: 14px; color: var(--navy); line-height: 1.2; }
+    .player-age  { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    .pts-val {
+      display: flex; align-items: center; gap: 5px;
+      font-weight: 800; font-size: 15px; color: var(--primary);
+      font-variant-numeric: tabular-nums;
+    }
+    .coins-val {
+      display: flex; align-items: center; gap: 5px;
+      font-weight: 800; font-size: 15px; color: #ca8a04;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .division {
+      font-size: 13px; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ADD / SUBTRACT cells share same layout */
+    .add-pts-cell,
+    .sub-pts-cell {
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .pts-input {
+      width: 54px; padding: 7px 6px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700;
+      color: var(--navy); text-align: center; outline: none;
+    }
+    .pts-input:focus { border-color: var(--primary); }
+
+    /* sub input — red focus ring */
+    .sub-input:focus { border-color: var(--destructive); }
+
+    .pts-submit {
+      display: flex; align-items: center; gap: 4px;
+      padding: 7px 10px;
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 999px;
+      font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 800;
+      cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .pts-submit:hover { background: var(--primary-hover); }
+
+    /* subtract button — red pill */
+    .pts-subtract {
+      display: flex; align-items: center; gap: 4px;
+      padding: 7px 10px;
+      background: rgba(239,68,68,0.08);
+      color: var(--destructive);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 999px;
+      font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 800;
+      cursor: pointer; transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .pts-subtract:hover {
+      background: rgba(239,68,68,0.15);
+      border-color: var(--destructive);
+    }
+
+    .actions-cell {
+      display: flex; align-items: center; justify-content: flex-end; gap: 2px;
+    }
+    .icon-btn {
+      width: 32px; height: 32px; border-radius: 6px; border: none;
+      background: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); transition: background 0.12s, color 0.12s;
+    }
+    .icon-btn:hover     { background: #f3f4f6; color: var(--navy); }
+    .icon-btn.del:hover { background: rgba(239,68,68,0.08); color: var(--destructive); }
+
+    .empty-state {
+      padding: 64px 24px; text-align: center; color: var(--muted); font-size: 14px;
+    }
+    .empty-icon {
+      width: 56px; height: 56px; background: rgba(242,168,7,0.1); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 24px;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: #fff; border-radius: 12px; padding: 32px 28px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+      transform: scale(0.95); transition: transform 0.2s;
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+
+    .modal h2 { font-size: 18px; font-weight: 800; color: var(--navy); margin-bottom: 20px; }
+    .modal .field { margin-bottom: 14px; }
+    .modal label {
+      display: block; font-size: 12px; font-weight: 700; color: var(--navy);
+      margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .modal input {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-family: 'Montserrat', sans-serif; font-size: 14px; color: var(--navy); outline: none;
+    }
+    .modal input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(242,168,7,0.1); }
+
+    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-cancel {
+      flex: 1; padding: 11px; background: #f3f4f6; color: var(--navy);
+      border: none; border-radius: 999px;
+      font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .btn-cancel:hover { background: #e5e7eb; }
+    .btn-confirm {
+      flex: 1; padding: 11px; background: var(--primary); color: #fff;
+      border: none; border-radius: 999px;
+      font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer;
+    }
+    .btn-confirm:hover  { background: var(--primary-hover); }
+    .btn-confirm.danger { background: var(--destructive); }
+    .btn-confirm.danger:hover { background: var(--destructive-hover); }
+
+    /* TOAST */
+    .toast-wrap {
+      position: fixed; bottom: 28px; right: 28px;
+      display: flex; flex-direction: column; gap: 10px; z-index: 9999;
+    }
+    .toast {
+      background: #fff; border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: 10px; padding: 14px 18px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      min-width: 240px; max-width: 320px;
+      animation: slideIn 0.25s ease; transition: opacity 0.3s;
+    }
+    .toast.coin   { background: #fefce8; border-color: #fde68a; border-left-color: #ca8a04; }
+    .toast.danger { background: #fff5f5; border-color: #fecaca; border-left-color: var(--destructive); }
+    .toast-title  { font-weight: 800; font-size: 14px; color: var(--navy); }
+    .toast-desc   { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    @media (max-width: 900px) {
+      .nav-inner { padding: 0 16px; }
+      .main { padding: 24px 16px 48px; }
+      .page-header { flex-wrap: wrap; }
+      .add-btn { width: 100%; justify-content: center; }
+
+      .table-head { display: none; }
+      .table-row {
+        display: flex; flex-direction: column; gap: 12px;
+        grid-template-columns: none; padding: 16px;
+      }
+      .rank-cell { justify-content: flex-start; }
+
+      .table-row > div { width: 100%; }
+      .table-row [data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 11px; font-weight: 800; color: var(--muted);
+        text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;
+      }
+      .add-pts-cell, .sub-pts-cell { flex-wrap: wrap; }
+      .pts-input { flex: 1; min-width: 0; }
+      .actions-cell { justify-content: flex-start; }
+    }
+
+    @media (max-width: 480px) {
+      .nav-title { display: none; }
+      .user-name { display: none; }
+      .divider-v { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <img src="{% static 'core/img/logo.svg' %}" alt="Snai3i" />
+      <div class="divider-v"></div>
+      <span class="nav-title">Points Tracker</span>
+    </div>
+    <div class="nav-right">
+      <div class="avatar">
+        {{ request.user.first_name|slice:":1" }}{{ request.user.last_name|slice:":1" }}
+      </div>
+      <span class="user-name">{{ request.user.first_name }} {{ request.user.last_name }}</span>
+      <a href="{% url 'signout' %}" class="sign-out-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Sign out
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1>{% if classroom %}{{ classroom.name }}{% else %}My Classes{% endif %}</h1>
+      <p>Choose a class to manage its students — every 10 points earns 1 coin</p>
+    </div>
+    <button class="add-btn" onclick="openAddModal()" {% if not classroom %}disabled{% endif %}>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Add Student
+    </button>
+  </div>
+
+  <div class="class-tools">
+    <select class="class-select" onchange="selectClass(this.value)" aria-label="Choose a class">
+      {% for item in classrooms %}
+        <option value="{{ item.id }}" {% if classroom and classroom.id == item.id %}selected{% endif %}>
+          {{ item.name }}{% if item.teacher.user_id != request.user.id %} (shared with you){% endif %}
+        </option>
+      {% empty %}
+        <option value="">No classes available</option>
+      {% endfor %}
+    </select>
+    {% if classroom %}
+      <span class="class-count">{{ students|length }} student{{ students|length|pluralize }}</span>
+    {% endif %}
+    {% if is_owner %}
+      <button class="share-btn" onclick="openShareModal()">Share this class</button>
+    {% endif %}
+    <button class="new-class-btn" onclick="openClassModal()">+ New class</button>
+  </div>
+
+  {% if classroom %}
+  <div class="collab-grid">
+    <details class="collab-card homework-card">
+      <summary class="homework-summary"><div class="collab-heading"><h2>Homework</h2><span class="collab-badge">Classwork</span></div></summary>
+      <div class="homework-content">
+      <div id="homework-list">
+        {% for homework in homeworks %}
+          <div class="homework-item"><strong>{{ homework.title }}</strong>{% if homework.due_date %}<span style="float:right;font-size:11px;color:var(--muted)">Due {{ homework.due_date }}</span>{% endif %}<p>{{ homework.description|default:"No description." }}</p></div>
+        {% empty %}<p id="no-homework" style="font-size:12px;color:var(--muted)">No homework for this class yet.</p>{% endfor %}
+      </div>
+      <div class="homework-form" style="margin-top:14px">
+        <input id="homework-title" placeholder="Homework title" maxlength="160">
+        <textarea id="homework-description" placeholder="Instructions (optional)"></textarea>
+        <input id="homework-due" type="date">
+        <button class="small-action" onclick="addHomework()">Add homework</button>
+      </div>
+      </div>
+    </details>
+  </div>
+  <button class="chat-fab" id="chat-fab" onclick="toggleChat(true)" aria-label="Open class chat" title="Open class chat">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  </button>
+  <div class="chat-panel" id="chat-panel">
+    <section class="collab-card">
+      <button class="chat-close" onclick="toggleChat(false)" aria-label="Close class chat">×</button>
+       <div class="collab-heading"><h2>Class chat</h2><span class="collab-badge">Live</span></div>
+      <div class="chat-list" id="chat-list">
+        {% for message in messages %}<div class="chat-message"><strong>{{ message.sender.get_full_name|default:message.sender.email }}</strong> <span>{{ message.created_at|date:"M d, H:i" }}</span><br>{{ message.body }}</div>{% empty %}<p id="no-messages" style="font-size:12px;color:var(--muted)">No messages yet.</p>{% endfor %}
+      </div>
+      <div class="chat-form"><input id="chat-input" placeholder="Write to this class..." maxlength="2000" onkeydown="if(event.key==='Enter')sendChat()"><button class="small-action" onclick="sendChat()">Send</button></div>
+    </section>
+  </div>
+  {% endif %}
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="setTab('leaderboard', this)">Leaderboard</button>
+    <button class="tab-btn" onclick="setTab('all', this)">All Students</button>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <div class="col-center">Rank</div>
+      <div>Student</div>
+      <div>Points</div>
+      <div>Coins</div>
+      <div>Add Points</div>
+      <div>Subtract Points</div>
+      <div class="col-center">Actions</div>
+    </div>
+
+    <div id="student-list">
+      {% for student in students %}
+      <div class="table-row"
+           id="row-{{ student.id }}"
+           data-id="{{ student.id }}"
+           data-order="{{ forloop.counter0 }}"
+           data-points="{{ student.points }}">
+
+        <!-- Rank -->
+        <div class="rank-cell">
+          <div class="rank-box" id="rank-box-{{ student.id }}">{{ forloop.counter }}</div>
+        </div>
+
+        <!-- Student -->
+        <div>
+          <div class="player-name" id="name-{{ student.id }}">
+            {{ student.user.first_name }} {{ student.user.last_name }}
+          </div>
+          <div class="player-age" id="age-{{ student.id }}">Age {{ student.age }}</div>
+        </div>
+
+        <!-- Points -->
+        <div class="pts-val" id="points-{{ student.id }}" data-label="Points">{{ student.points }}</div>
+
+        <!-- Coins -->
+        <div class="coins-val" id="coins-{{ student.id }}" data-label="Coins">{{ student.coins }}</div>
+
+        <!-- Add Points -->
+        <div class="add-pts-cell" data-label="Add Points">
+          <input class="pts-input"
+                 type="number"
+                 id="pts-input-{{ student.id }}"
+                 value="1" min="0.1" step="0.1" max="9999" />
+          <button class="pts-submit" onclick="addPoints({{ student.id }})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add
+          </button>
+        </div>
+
+        <!-- ▼ NEW: Subtract Points -->
+        <div class="sub-pts-cell" data-label="Subtract Points">
+          <input class="pts-input sub-input"
+                 type="number"
+                 id="sub-input-{{ student.id }}"
+                 value="1" min="0.1" step="0.1" max="9999" />
+          <button class="pts-subtract" onclick="subtractPoints({{ student.id }})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Sub
+          </button>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-cell">
+          <button class="icon-btn" title="Edit"
+                  onclick="openEditModal({{ student.id }}, '{{ student.user.first_name }} {{ student.user.last_name }}', {{ student.age }})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="icon-btn del" title="Delete" onclick="deleteStudent({{ student.id }})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F2A807" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+        </div>
+        No students yet — click <strong>Add Student</strong> to get started.
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</main>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <h2 id="modal-title">New Student</h2>
+    <div class="field">
+      <label>Full Name</label>
+      <input type="text" id="m-name" placeholder="Student name" />
+    </div>
+    <div class="field">
+      <label>Age</label>
+      <input type="number" id="m-age" placeholder="Age" min="1" max="100" />
+    </div>
+    <div class="field">
+    </div>
+    <div class="field" id="field-email">
+      <label>Email (login)</label>
+      <input type="email" id="m-email" placeholder="student@email.com" />
+    </div>
+    <div class="field" id="field-password">
+      <label>Password</label>
+      <input type="password" id="m-password" placeholder="Set a password" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" id="modal-confirm-btn" onclick="confirmModal()">Add Student</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="class-overlay" onclick="handleClassOverlayClick(event)">
+  <div class="modal">
+    <h2>New class</h2>
+    <p style="font-size:13px;color:var(--muted);margin:-10px 0 18px;">
+      This class will be separate from your other classes.
+    </p>
+    <div class="field">
+      <label>Class name</label>
+      <input type="text" id="class-name" placeholder="For example: Grade 4 — Morning" maxlength="100" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeClassModal()">Cancel</button>
+      <button class="btn-confirm" onclick="createClass()">Create class</button>
+    </div>
+  </div>
+</div>
+
+{% if is_owner %}
+<div class="modal-overlay" id="share-overlay" onclick="handleShareOverlayClick(event)">
+  <div class="modal">
+    <h2>Share {{ classroom.name }}</h2>
+    <p style="font-size:13px;color:var(--muted);margin:-10px 0 18px;">
+      Add another existing teacher by their account email.
+    </p>
+    <div class="field">
+      <label>Teacher email</label>
+      <input type="email" id="share-email" placeholder="teacher@email.com" />
+    </div>
+    <div id="shared-teachers" style="margin-top:18px;">
+      {% for shared in shared_teachers %}
+        <div class="shared-teacher" data-teacher-id="{{ shared.id }}" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);font-size:12px;">
+          <span>{{ shared.user.first_name }} {{ shared.user.last_name }}<br><span style="color:var(--muted);">{{ shared.user.email }}</span></span>
+          <button class="icon-btn del" title="Remove access" onclick="removeTeacherAccess({{ shared.id }})">×</button>
+        </div>
+      {% empty %}
+        <div id="no-shared-teachers" style="font-size:12px;color:var(--muted);">No other teachers have access yet.</div>
+      {% endfor %}
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeShareModal()">Close</button>
+      <button class="btn-confirm" onclick="shareClass()">Share access</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="toast-wrap" id="toast-wrap"></div>
+<!-- THREE.JS COIN CELEBRATION CANVAS -->
+<canvas id="celebration-canvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:99999;pointer-events:none;opacity:0;transition:opacity 0.4s ease;"></canvas>
+
+
+<script>
+  let editId = null;
+  const currentClassroomId = {% if classroom %}{{ classroom.id }}{% else %}null{% endif %};
+
+  function selectClass(classroomId) {
+    if (classroomId) window.location.href = '/dashboard/?classroom_id=' + encodeURIComponent(classroomId);
+  }
+
+  function classroomUrl(path) {
+    if (!currentClassroomId) return path;
+    return path + (path.includes('?') ? '&' : '?') + 'classroom_id=' + encodeURIComponent(currentClassroomId);
+  }
+
+  function addHomework() {
+    const title = document.getElementById('homework-title').value.trim();
+    const description = document.getElementById('homework-description').value.trim();
+    const due_date = document.getElementById('homework-due').value;
+    if (!title) { toast('Incomplete', 'Enter a homework title.', 'danger'); return; }
+    fetch('/add-homework/', { method:'POST', headers:{'X-CSRFToken':getCSRFToken(),'Content-Type':'application/json'}, body:JSON.stringify({title, description, due_date, classroom_id:currentClassroomId}) })
+      .then(r=>r.json()).then(data=>{
+        if (!data.success) { toast('Error', data.error || 'Could not add homework.', 'danger'); return; }
+        document.getElementById('no-homework')?.remove();
+        const item=document.createElement('div'); item.className='homework-item';
+        item.innerHTML='<strong></strong>'+(data.homework.due_date?'<span style="float:right;font-size:11px;color:var(--muted)">Due '+data.homework.due_date+'</span>':'')+'<p></p>';
+        item.querySelector('strong').textContent=data.homework.title; item.querySelector('p').textContent=data.homework.description||'No description.';
+        document.getElementById('homework-list').prepend(item);
+        document.getElementById('homework-title').value=''; document.getElementById('homework-description').value=''; document.getElementById('homework-due').value='';
+        toast('Homework added', 'The class can now see it.');
+      }).catch(()=>toast('Error','Network error — please try again.','danger'));
+  }
+
+  function sendChat() {
+    const input=document.getElementById('chat-input'), body=input.value.trim();
+    if (!body) return;
+    fetch('/send-message/', { method:'POST', headers:{'X-CSRFToken':getCSRFToken(),'Content-Type':'application/json'}, body:JSON.stringify({body, classroom_id:currentClassroomId}) })
+      .then(r=>r.json()).then(data=>{
+        if (!data.success) { toast('Error', data.error || 'Could not send message.', 'danger'); return; }
+        document.getElementById('no-messages')?.remove();
+        const item=document.createElement('div'); item.className='chat-message';
+        item.innerHTML='<strong></strong> <span></span><br>'; item.querySelector('strong').textContent=data.message.sender; item.querySelector('span').textContent=data.message.created_at; item.append(document.createTextNode(data.message.body));
+        const list=document.getElementById('chat-list'); list.appendChild(item); list.scrollTop=list.scrollHeight; input.value='';
+      }).catch(()=>toast('Error','Network error — please try again.','danger'));
+  }
+
+  function toggleChat(open) {
+    document.getElementById('chat-panel').classList.toggle('open', open);
+    document.getElementById('chat-fab').style.display = open ? 'none' : 'block';
+  }
+
+  function openClassModal() {
+    document.getElementById('class-overlay').classList.add('open');
+    document.getElementById('class-name').focus();
+  }
+
+  function closeClassModal() {
+    document.getElementById('class-overlay').classList.remove('open');
+    document.getElementById('class-name').value = '';
+  }
+
+  function handleClassOverlayClick(e) {
+    if (e.target === document.getElementById('class-overlay')) closeClassModal();
+  }
+
+  function createClass() {
+    const input = document.getElementById('class-name');
+    const name = input.value.trim();
+    if (!name) { toast('Incomplete', 'Enter a class name.', 'danger'); return; }
+
+    fetch('/add-classroom/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) {
+        toast('Cannot create class', data.error || 'Please try again.', 'danger');
+        return;
+      }
+      window.location.href = '/dashboard/?classroom_id=' + encodeURIComponent(data.classroom_id);
+    })
+    .catch(() => toast('Error', 'Network error — please try again.', 'danger'));
+  }
+
+  /* ── CSRF ── */
+  function getCSRFToken() {
+    const match = document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('csrftoken='));
+    return match ? decodeURIComponent(match.split('=')[1]) : '';
+  }
+
+  /* ── ADD POINTS ── */
+  function addPoints(studentId) {
+    const input  = document.getElementById('pts-input-' + studentId);
+    const amount = parseFloat(input.value);
+    if (!amount || amount <= 0) { toast('Invalid', 'Enter a positive number of points.'); return; }
+
+    fetch(classroomUrl('/add-points/' + studentId + '/'), {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, classroom_id: currentClassroomId }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        updateRowValues(studentId, data.points, data.coins);
+        input.value = 1; // reset add input
+        flashRow(studentId, 'add');
+        if (data.new_coins && data.new_coins > 0) {
+          toast('Coin earned! 🪙', data.new_coins + ' new coin(s) awarded!', 'coin');
+          launchCoinCelebration(data.new_coins);
+        } else {
+          toast('Points added', '+' + fmtPts(amount) + ' points added.');
+        }
+        if (currentTab === 'leaderboard') sortRows('leaderboard');
+      } else {
+        toast('Error', data.error || 'Failed to add points.', 'danger');
+      }
+    })
+    .catch(() => toast('Error', 'Network error — please try again.', 'danger'));
+  }
+
+  /* ── SUBTRACT POINTS ── */
+  function subtractPoints(studentId) {
+    const input  = document.getElementById('sub-input-' + studentId);
+    const amount = parseFloat(input.value);
+    if (!amount || amount <= 0) { toast('Invalid', 'Enter a positive number of points.', 'danger'); return; }
+
+    const currentPts = parseFloat(document.getElementById('row-' + studentId).dataset.points);
+    if (amount > currentPts) {
+      toast('Too many', 'Cannot subtract more than current points (' + currentPts + ').', 'danger');
+      return;
+    }
+
+    fetch(classroomUrl('/subtract-points/' + studentId + '/'), {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, classroom_id: currentClassroomId }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        updateRowValues(studentId, data.points, data.coins);
+        input.value = 1; // reset sub input
+        flashRow(studentId, 'sub');
+        toast('Points removed', '−' + fmtPts(amount) + ' points subtracted.', 'danger');
+        if (currentTab === 'leaderboard') sortRows('leaderboard');
+      } else {
+        toast('Error', data.error || 'Failed to subtract points.', 'danger');
+      }
+    })
+    .catch(() => toast('Error', 'Network error — please try again.', 'danger'));
+  }
+
+  /* ── SHARED ROW HELPERS ── */
+  function fmtPts(v) {
+    // Show 5 as "5", 5.5 as "5.5" — no unnecessary ".0"
+    const n = parseFloat(v);
+    return Number.isInteger(n) ? String(n) : n.toFixed(1);
+  }
+
+  function updateRowValues(studentId, points, coins) {
+    document.getElementById('points-' + studentId).textContent = fmtPts(points);
+    document.getElementById('coins-'  + studentId).textContent = coins;
+    document.getElementById('row-'    + studentId).dataset.points = points;
+  }
+
+  function flashRow(studentId, type) {
+    const row = document.getElementById('row-' + studentId);
+    row.classList.remove('flash-add', 'flash-sub');
+    void row.offsetWidth;
+    row.classList.add(type === 'add' ? 'flash-add' : 'flash-sub');
+    setTimeout(() => row.classList.remove('flash-add', 'flash-sub'), 700);
+  }
+
+  /* ── DELETE ── */
+  function deleteStudent(studentId) {
+    if (!confirm('Delete this student? This cannot be undone.')) return;
+    fetch(classroomUrl('/delete-student/' + studentId + '/'), {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ classroom_id: currentClassroomId }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('row-' + studentId).remove();
+        updateRanks();
+        toast('Removed', 'Student deleted.');
+      } else {
+        toast('Error', data.error || 'Failed to delete.', 'danger');
+      }
+    })
+    .catch(() => toast('Error', 'Network error — please try again.', 'danger'));
+  }
+
+  /* ── EDIT MODAL ── */
+  function openEditModal(id, name, age) {
+    editId = id;
+    document.getElementById('modal-title').textContent = 'Edit Student';
+    document.getElementById('modal-confirm-btn').textContent = 'Save Changes';
+    document.getElementById('m-name').value = name;
+    document.getElementById('m-age').value  = age;
+    document.getElementById('field-email').style.display    = 'none';
+    document.getElementById('field-password').style.display = 'none';
+    document.getElementById('modal-overlay').classList.add('open');
+    document.getElementById('m-name').focus();
+  }
+
+  function openAddModal() {
+    editId = null;
+    document.getElementById('modal-title').textContent = 'New Student';
+    document.getElementById('modal-confirm-btn').textContent = 'Add Student';
+    ['m-name','m-age','m-email','m-password'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('field-email').style.display    = '';
+    document.getElementById('field-password').style.display = '';
+    document.getElementById('modal-overlay').classList.add('open');
+    document.getElementById('m-name').focus();
+  }
+
+  function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+  function handleOverlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+  function openShareModal() {
+    document.getElementById('share-overlay').classList.add('open');
+    document.getElementById('share-email').focus();
+  }
+
+  function closeShareModal() {
+    document.getElementById('share-overlay').classList.remove('open');
+    document.getElementById('share-email').value = '';
+  }
+
+  function handleShareOverlayClick(e) {
+    if (e.target === document.getElementById('share-overlay')) closeShareModal();
+  }
+
+  function shareClass() {
+    const input = document.getElementById('share-email');
+    const email = input.value.trim();
+    if (!email) { toast('Incomplete', 'Enter the teacher email.', 'danger'); return; }
+
+    fetch('/share-classroom/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, classroom_id: currentClassroomId }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) {
+        toast('Cannot share', data.error || 'Access was not shared.', 'danger');
+        return;
+      }
+      const empty = document.getElementById('no-shared-teachers');
+      if (empty) empty.remove();
+      const row = document.createElement('div');
+      row.className = 'shared-teacher';
+      row.dataset.teacherId = data.teacher_id || '';
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);font-size:12px;';
+      row.innerHTML = '<span>' + data.teacher + '<br><span style="color:var(--muted);">' + data.email + '</span></span><button class="icon-btn del" title="Remove access" onclick="removeTeacherAccess(' + data.teacher_id + ')">×</button>';
+      document.getElementById('shared-teachers').appendChild(row);
+      input.value = '';
+      toast('Access shared', data.email + ' can now enter this class.');
+    })
+    .catch(() => toast('Error', 'Network error — please try again.', 'danger'));
+  }
+
+  function removeTeacherAccess(teacherId) {
+    if (!confirm('Remove this teacher’s access to the class?')) return;
+    fetch('/unshare-classroom/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teacher_id: teacherId, classroom_id: currentClassroomId }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) {
+        toast('Cannot remove access', data.error || 'Please try again.', 'danger');
+        return;
+      }
+      const row = document.querySelector('.shared-teacher[data-teacher-id="' + teacherId + '"]');
+      if (row) row.remove();
+      toast('Access removed', 'The teacher can no longer enter this class.');
+    })
+    .catch(() => toast('Error', 'Network error — please try again.', 'danger'));
+  }
+
+  function confirmModal() {
+    const name     = document.getElementById('m-name').value.trim();
+    const age      = parseInt(document.getElementById('m-age').value, 10);
+    if (!name || !age) { toast('Incomplete', 'Please fill in the name and age.'); return; }
+
+    const url  = editId ? '/update-student/' + editId + '/' : '/add-student/';
+    const body = { name, age, classroom_id: currentClassroomId };
+
+    if (!editId) {
+      const email    = document.getElementById('m-email').value.trim();
+      const password = document.getElementById('m-password').value.trim();
+      if (!email || !password) { toast('Incomplete', 'Email and password are required.'); return; }
+      body.email = email; body.password = password;
+    }
+
+    fetch(url, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        if (editId) {
+          document.getElementById('name-'     + editId).textContent = name;
+          document.getElementById('age-'      + editId).textContent = 'Age ' + age;
+          const editBtn = document.getElementById('row-' + editId).querySelector('.icon-btn:not(.del)');
+          editBtn.setAttribute('onclick',
+            "openEditModal(" + editId + ",'" + name.replace(/'/g,"\\'") + "'," + age + ")");
+          toast('Saved', name + "'s details updated.");
+        } else {
+          // Inject new row without page reload
+          const newId    = data.student_id;
+          const allRows  = document.querySelectorAll('#student-list .table-row');
+          const newOrder = allRows.length;
+          const row = document.createElement('div');
+          row.className   = 'table-row';
+          row.id          = 'row-'  + newId;
+          row.dataset.id     = newId;
+          row.dataset.order  = newOrder;
+          row.dataset.points = 0;
+          row.innerHTML = `
+            <div class="rank-cell"><div class="rank-box" id="rank-box-${newId}">—</div></div>
+            <div>
+              <div class="player-name" id="name-${newId}">${name}</div>
+              <div class="player-age"  id="age-${newId}">Age ${age}</div>
+            </div>
+            <div class="pts-val"   id="points-${newId}" data-label="Points">0</div>
+            <div class="coins-val" id="coins-${newId}" data-label="Coins">0</div>
+            <div class="add-pts-cell" data-label="Add Points">
+              <input class="pts-input" type="number" id="pts-input-${newId}" value="1" min="0.1" step="0.1" max="9999" />
+              <button class="pts-submit" onclick="addPoints(${newId})">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add
+              </button>
+            </div>
+            <div class="sub-pts-cell" data-label="Subtract Points">
+              <input class="pts-input sub-input" type="number" id="sub-input-${newId}" value="1" min="0.1" step="0.1" max="9999" />
+              <button class="pts-subtract" onclick="subtractPoints(${newId})">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Sub
+              </button>
+            </div>
+            <div class="actions-cell">
+              <button class="icon-btn" title="Edit"
+                      onclick="openEditModal(${newId},'${name.replace(/'/g,"\\'")}',${age})">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button class="icon-btn del" title="Delete" onclick="deleteStudent(${newId})">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            </div>`;
+          // Remove empty-state placeholder if present
+          const empty = document.querySelector('#student-list .empty-state');
+          if (empty) empty.remove();
+          document.getElementById('student-list').appendChild(row);
+          updateRanks();
+          toast('Added', name + ' was added to the class.');
+        }
+        closeModal();
+      } else {
+        toast('Error', data.error || 'Operation failed.', 'danger');
+      }
+    })
+    .catch(() => toast('Error', 'Network error — please try again.', 'danger'));
+  }
+
+  /* ── TABS ── */
+  let currentTab = 'leaderboard';
+  function setTab(t, btn) {
+    currentTab = t;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    sortRows(t);
+  }
+
+  function sortRows(tab) {
+    const list = document.getElementById('student-list');
+    const rows = Array.from(list.querySelectorAll('.table-row'));
+    if (tab === 'leaderboard') {
+      rows.sort((a, b) => parseFloat(b.dataset.points) - parseFloat(a.dataset.points));
+    } else {
+      rows.sort((a, b) => parseInt(a.dataset.order,10)  - parseInt(b.dataset.order,10));
+    }
+    rows.forEach(row => list.appendChild(row));
+    updateRanks();
+  }
+
+  /* ── RANKS ── */
+  function updateRanks() {
+    const rows   = Array.from(document.getElementById('student-list').querySelectorAll('.table-row'));
+    const medals = ['gold','silver','bronze'];
+    rows.forEach((row, idx) => {
+      const box = document.getElementById('rank-box-' + row.dataset.id);
+      if (!box) return;
+      box.textContent = idx + 1;
+      box.className   = 'rank-box';
+      if (idx < 3 && currentTab === 'leaderboard') box.classList.add(medals[idx]);
+    });
+  }
+
+  /* ── TOAST ── */
+  function toast(title, desc, type = '') {
+    const wrap = document.getElementById('toast-wrap');
+    const el   = document.createElement('div');
+    el.className = 'toast' + (type ? ' ' + type : '');
+    el.innerHTML = '<div class="toast-title">' + title + '</div>'
+                 + '<div class="toast-desc">'  + desc  + '</div>';
+    wrap.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 2800);
+  }
+
+  /* ── KEYBOARD ── */
+  document.addEventListener('keydown', e => {
+    const open = document.getElementById('modal-overlay').classList.contains('open');
+    if (e.key === 'Escape' && open) closeModal();
+    if (e.key === 'Enter'  && open) confirmModal();
+  });
+
+  updateRanks();
+  /* ─── THREE.JS COIN CELEBRATION ─── */
+  function launchCoinCelebration(numCoins) {
+    if (window._celebRunning) return;
+    if (!window.THREE) {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js';
+      s.onload = () => runCelebration(numCoins);
+      document.head.appendChild(s);
+    } else {
+      runCelebration(numCoins);
+    }
+  }
+
+  function runCelebration(numCoins) {
+    window._celebRunning = true;
+    const THREE = window.THREE;
+    const canvas = document.getElementById('celebration-canvas');
+
+    /* ── Gold flash then dark backdrop ── */
+    const flash = document.createElement('div');
+    flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,220,50,0.55);z-index:99997;pointer-events:none;transition:background 0.55s ease;';
+    document.body.appendChild(flash);
+    requestAnimationFrame(() => requestAnimationFrame(() => { flash.style.background = 'rgba(0,0,0,0.32)'; }));
+
+    /* ── Text banner ── */
+    const banner = document.createElement('div');
+    const coinWord = numCoins > 1 ? numCoins + ' Coins' : '1 Coin';
+    banner.style.cssText = [
+      'position:fixed','top:42%','left:50%',
+      'transform:translate(-50%,-50%) scale(0) rotate(-6deg)',
+      'z-index:100002','pointer-events:none','text-align:center',
+      'font-family:Montserrat,sans-serif','font-weight:900','line-height:1.15'
+    ].join(';');
+    banner.innerHTML =
+      '<div style="font-size:clamp(52px,9vw,96px);filter:drop-shadow(0 0 18px #FFD700)">\uD83E\uDE99</div>' +
+      '<div style="font-size:clamp(28px,5.5vw,62px);color:#fff;text-shadow:0 0 18px #FFD700,0 0 40px #F2A807,0 3px 10px rgba(0,0,0,0.7)">+' + coinWord + ' Earned!</div>' +
+      '<div style="font-size:clamp(13px,2vw,18px);color:rgba(255,230,100,0.9);margin-top:6px;text-shadow:0 0 8px #FFD700,0 2px 6px rgba(0,0,0,0.5)">Keep it up! \u2B50</div>';
+    document.body.appendChild(banner);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      banner.style.transition = 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease';
+      banner.style.transform  = 'translate(-50%,-50%) scale(1) rotate(0deg)';
+    }));
+
+    /* ── Renderer ── */
+    const W = window.innerWidth, H = window.innerHeight;
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(68, W / H, 0.1, 300);
+    camera.position.set(0, 1.5, 20);
+    camera.lookAt(0, 0, 0);
+
+    /* ── Lights ── */
+    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+    const sun = new THREE.DirectionalLight(0xfff4c0, 3.0);
+    sun.position.set(6, 14, 10); scene.add(sun);
+    const rim = new THREE.DirectionalLight(0xffe080, 1.4);
+    rim.position.set(-10, -4, 8); scene.add(rim);
+    const burst = new THREE.PointLight(0xFFDD00, 18, 32);
+    burst.position.set(0, 0, 5); scene.add(burst);
+
+    /* ── Shockwave rings ── */
+    function makeRing(radius, tube, color, opacity) {
+      const g = new THREE.TorusGeometry(radius, tube, 10, 90);
+      const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side: THREE.DoubleSide });
+      const mesh = new THREE.Mesh(g, m);
+      mesh.scale.setScalar(0.01); scene.add(mesh); return mesh;
+    }
+    const ring1 = makeRing(0.3, 0.08, 0xFFE44A, 0.95);
+    const ring2 = makeRing(0.3, 0.05, 0xFFBB00, 0.75);
+    const ring3 = makeRing(0.3, 0.03, 0xFFFFFF, 0.55);
+
+    /* ── Coin textures ── */
+    function makeTex(symbol) {
+      const tc = document.createElement('canvas');
+      tc.width = 256; tc.height = 256;
+      const ctx = tc.getContext('2d');
+      const g = ctx.createRadialGradient(110,95,14,128,128,128);
+      g.addColorStop(0,'#FFF0A0'); g.addColorStop(0.6,'#F2A807'); g.addColorStop(1,'#7A4800');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(128,128,122,0,Math.PI*2); ctx.fill();
+      const rim2 = ctx.createLinearGradient(0,0,256,256);
+      rim2.addColorStop(0,'rgba(255,255,200,0.6)'); rim2.addColorStop(1,'rgba(120,70,0,0.2)');
+      ctx.strokeStyle = rim2; ctx.lineWidth = 10; ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,220,80,0.4)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(128,128,98,0,Math.PI*2); ctx.stroke();
+      ctx.fillStyle = 'rgba(70,35,0,0.82)';
+      ctx.font = 'bold 96px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.shadowColor='rgba(255,200,0,0.5)'; ctx.shadowBlur=10;
+      ctx.fillText(symbol, 128, 134);
+      return new THREE.CanvasTexture(tc);
+    }
+    const textures = ['\u2605','\u2666','\u2764','\u26A1','\u2728'].map(makeTex);
+
+    /* ── Coins ── */
+    const coinGeo   = new THREE.CylinderGeometry(0.60, 0.60, 0.14, 48);
+    const COUNT     = Math.min(60 + numCoins * 15, 120);
+    const coins     = [];
+    for (let i = 0; i < COUNT; i++) {
+      const tex     = textures[i % textures.length];
+      const faceMat = new THREE.MeshPhongMaterial({ map: tex, shininess: 200, specular: 0xffffff, emissive: new THREE.Color(0.12,0.07,0) });
+      const sideMat = new THREE.MeshPhongMaterial({ color: 0x8A5500, shininess: 90, emissive: new THREE.Color(0.06,0.03,0) });
+      const mesh    = new THREE.Mesh(coinGeo, [sideMat, faceMat, faceMat]);
+      mesh.scale.setScalar(0.45 + Math.random() * 1.05);
+      mesh.position.set((Math.random()-0.5)*0.6,(Math.random()-0.5)*0.6,(Math.random()-0.5)*0.4);
+      const theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1), spd=10+Math.random()*13;
+      mesh.userData.vel={x:Math.sin(phi)*Math.cos(theta)*spd, y:Math.sin(phi)*Math.sin(theta)*spd+6, z:Math.cos(phi)*spd*0.4};
+      mesh.userData.rot={x:(Math.random()-0.5)*14, y:(Math.random()-0.5)*14, z:(Math.random()-0.5)*8};
+      scene.add(mesh); coins.push(mesh);
+    }
+
+    /* ── Confetti strips ── */
+    const STRIP_COLS=[0xFF6B6B,0x4ECDC4,0x45B7D1,0xFED766,0x9B59B6,0xFF9F43,0x00D2A0,0xFF4DA6,0x7BEC5C];
+    const strips=[];
+    for (let i=0; i<80; i++) {
+      const geo=(i%3===0)?new THREE.PlaneGeometry(0.12,0.52):new THREE.PlaneGeometry(0.22,0.22);
+      const mat=new THREE.MeshBasicMaterial({color:STRIP_COLS[i%STRIP_COLS.length],side:THREE.DoubleSide,transparent:true,opacity:0.93});
+      const mesh=new THREE.Mesh(geo,mat);
+      mesh.position.set((Math.random()-0.5)*0.4,(Math.random()-0.5)*0.4,(Math.random()-0.5)*0.3);
+      const theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1), spd=8+Math.random()*12;
+      mesh.userData.vel={x:Math.sin(phi)*Math.cos(theta)*spd,y:Math.sin(phi)*Math.sin(theta)*spd+5,z:Math.cos(phi)*spd*0.25};
+      mesh.userData.rot={x:(Math.random()-0.5)*20,y:(Math.random()-0.5)*20,z:(Math.random()-0.5)*20};
+      scene.add(mesh); strips.push(mesh);
+    }
+
+    /* ── Sparkles ── */
+    function makeSparkles(count, color, size) {
+      const pos=new Float32Array(count*3), vel=[];
+      for(let i=0;i<count;i++){
+        pos[i*3]=(Math.random()-0.5)*0.3; pos[i*3+1]=(Math.random()-0.5)*0.3; pos[i*3+2]=(Math.random()-0.5)*0.3;
+        const theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1), spd=10+Math.random()*16;
+        vel.push({x:Math.sin(phi)*Math.cos(theta)*spd, y:Math.sin(phi)*Math.sin(theta)*spd+5, z:Math.cos(phi)*spd*0.2});
+      }
+      const geo=new THREE.BufferGeometry();
+      geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+      const mat=new THREE.PointsMaterial({color,size,transparent:true,opacity:1.0,sizeAttenuation:true});
+      const pts=new THREE.Points(geo,mat);
+      scene.add(pts);
+      return {pts,geo,mat,vel,count};
+    }
+    const goldSparks  = makeSparkles(140, 0xFFE44A, 0.24);
+    const whiteSparks = makeSparkles(80,  0xFFFFFF, 0.14);
+
+    canvas.style.opacity = '1';
+
+    const GRAVITY=13.5, DURATION=4400, FADE_START=3200;
+    const T0=performance.now(); let lastT=T0, shakeAmt=0.35, r2=false, r3=false;
+
+    function tick(now) {
+      const elapsed=now-T0, dt=Math.min((now-lastT)/1000,0.05);
+      lastT=now;
+
+      if (elapsed>=DURATION) {
+        canvas.style.opacity='0'; banner.style.opacity='0'; flash.style.background='rgba(0,0,0,0)';
+        setTimeout(()=>{
+          renderer.dispose();
+          coins.forEach(m=>{m.geometry.dispose();(Array.isArray(m.material)?m.material:[m.material]).forEach(x=>x.dispose());scene.remove(m);});
+          strips.forEach(m=>{m.geometry.dispose();m.material.dispose();scene.remove(m);});
+          [goldSparks,whiteSparks].forEach(({pts,geo,mat})=>{geo.dispose();mat.dispose();scene.remove(pts);});
+          [ring1,ring2,ring3].forEach(r=>{r.geometry.dispose();r.material.dispose();scene.remove(r);});
+          textures.forEach(t=>t.dispose()); coinGeo.dispose();
+          flash.remove(); banner.remove(); window._celebRunning=false;
+        },500); return;
+      }
+
+      /* Camera shake */
+      shakeAmt=Math.max(0, shakeAmt-dt*0.7);
+      camera.position.x=(Math.random()-0.5)*shakeAmt;
+      camera.position.y=1.5+(Math.random()-0.5)*shakeAmt;
+
+      /* Burst light decay */
+      burst.intensity=Math.max(0,18-elapsed/100);
+
+      /* Shockwave rings */
+      const rp1=Math.min(elapsed/600,1);
+      ring1.scale.setScalar(rp1*28); ring1.material.opacity=Math.max(0,1-rp1*1.1);
+      if(elapsed>80&&!r2){r2=true;} if(r2){const rp2=Math.min((elapsed-80)/650,1);ring2.scale.setScalar(rp2*22);ring2.material.opacity=Math.max(0,0.75-rp2*0.85);}
+      if(elapsed>180&&!r3){r3=true;} if(r3){const rp3=Math.min((elapsed-180)/700,1);ring3.scale.setScalar(rp3*16);ring3.material.opacity=Math.max(0,0.55-rp3*0.65);}
+
+      /* Coins */
+      coins.forEach(m=>{
+        m.userData.vel.y-=GRAVITY*dt;
+        m.position.x+=m.userData.vel.x*dt; m.position.y+=m.userData.vel.y*dt; m.position.z+=m.userData.vel.z*dt;
+        m.rotation.x+=m.userData.rot.x*dt; m.rotation.y+=m.userData.rot.y*dt; m.rotation.z+=m.userData.rot.z*dt;
+      });
+
+      /* Strips */
+      strips.forEach(m=>{
+        m.userData.vel.y-=GRAVITY*0.7*dt;
+        m.position.x+=m.userData.vel.x*dt; m.position.y+=m.userData.vel.y*dt; m.position.z+=m.userData.vel.z*dt;
+        m.rotation.x+=m.userData.rot.x*dt; m.rotation.y+=m.userData.rot.y*dt; m.rotation.z+=m.userData.rot.z*dt;
+      });
+
+      /* Sparkles */
+      [goldSparks,whiteSparks].forEach(({geo,vel,count})=>{
+        const pa=geo.attributes.position.array;
+        for(let i=0;i<count;i++){vel[i].y-=GRAVITY*dt;pa[i*3]+=vel[i].x*dt;pa[i*3+1]+=vel[i].y*dt;pa[i*3+2]+=vel[i].z*dt;}
+        geo.attributes.position.needsUpdate=true;
+      });
+
+      /* Fade */
+      if(elapsed>FADE_START){
+        const t=(elapsed-FADE_START)/(DURATION-FADE_START), a=Math.max(0,1-t);
+        canvas.style.opacity=String(a); goldSparks.mat.opacity=a; whiteSparks.mat.opacity=a*0.85;
+        strips.forEach(m=>{m.material.opacity=a*0.93;});
+        banner.style.opacity=String(a); flash.style.background='rgba(0,0,0,'+(0.32*a)+')';
+      }
+
+      renderer.render(scene,camera);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+</script>
+</body>
+</html>

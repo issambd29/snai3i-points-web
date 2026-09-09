@@ -1,0 +1,27 @@
+databases:
+  - name: snai3i-postgres
+    databaseName: snai3i
+    user: snai3i_user
+    plan: free
+
+services:
+  - type: web
+    name: snai3i-points-tracker
+    runtime: python
+    buildCommand: "chmod +x build.sh && ./build.sh"
+    startCommand: "gunicorn school_project.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: snai3i-postgres
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ADMIN_EMAIL
+        value: admin@snai3i.com  # change this to your real admin email after first deploy
+      - key: ADMIN_PASSWORD
+        generateValue: true  # Render generates a strong random password — view it in the Render dashboard under this service's Environment tab
