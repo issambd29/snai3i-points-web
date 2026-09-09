@@ -56,6 +56,14 @@ def user_to_dict(user):
     }
 
 
+def api_health(request):
+    return JsonResponse({
+        'status': 'ok',
+        'backend': 'django',
+        'database': 'postgresql',
+    })
+
+
 @csrf_exempt
 def api_signin(request):
     if request.method != 'POST':
@@ -1160,6 +1168,21 @@ def api_store_order_status(request, order_id):
                 from django.utils import timezone
                 order.completed_at = timezone.now()
 
+            should_remove = data.get('remove') is True or (data.get('remove') is not False and new_status in ['approved', 'rejected', 'completed'])
+            if should_remove:
+                order_id_copy = order.id
+                order.delete()
+                msg = f"Request rejected and removed. {cost} coins refunded to student." if new_status == 'rejected' else "Request approved and completed. The request has been removed."
+                return JsonResponse({
+                    'success': True,
+                    'orderId': f'ord-{order_id_copy}',
+                    'status': new_status,
+                    'removed': True,
+                    'refunded': refunded_now,
+                    'refundAmount': cost if refunded_now else 0,
+                    'message': msg,
+                })
+
             order.save()
 
             msg = f"Order status updated to {new_status}."
@@ -1170,6 +1193,7 @@ def api_store_order_status(request, order_id):
                 'success': True,
                 'orderId': f'ord-{order.id}',
                 'status': new_status,
+                'removed': False,
                 'refunded': order.refunded,
                 'refundAmount': cost if refunded_now else 0,
                 'message': msg,

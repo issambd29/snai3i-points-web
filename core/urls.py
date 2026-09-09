@@ -10,6 +10,7 @@ from .views import (
     add_homework, send_message,
 )
 from .api import (
+    api_health,
     api_signin, api_signup, api_signout, api_current_user,
     api_get_app_data, api_add_points, api_subtract_points,
     api_students, api_teachers, api_classrooms,
@@ -21,6 +22,7 @@ from .api import (
 )
 
 urlpatterns = [
+    re_path(r'^api/health/?$',                    api_health,        name='api_health'),
     path('',                                      home,              name='home'),
     path('signin/',                               signin_view,       name='signin'),
     path('signup/',                               signup_view,       name='signup'),

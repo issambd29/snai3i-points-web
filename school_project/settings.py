@@ -30,6 +30,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:3000',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'http://localhost:8001',
+    'http://127.0.0.1:8001',
 ]
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
@@ -59,6 +61,18 @@ else:
 
 SESSION_COOKIE_HTTPONLY = True
 X_FRAME_OPTIONS = 'DENY'
+
+# Helper to normalize Render PostgreSQL internal URLs when connecting from outside Render internal network
+def normalize_db_url(raw_url):
+    if not raw_url:
+        return raw_url
+    import re
+    url = raw_url.strip()
+    if '@dpg-' in url and '.render.com' not in url:
+        url = re.sub(r'@(dpg-[^/]+)/', r'@\1.frankfurt-postgres.render.com/', url)
+    if 'sslmode=' not in url:
+        url += ('&' if '?' in url else '?') + 'sslmode=require'
+    return url
 
 # Application definition
 INSTALLED_APPS = [
@@ -112,11 +126,13 @@ WSGI_APPLICATION = 'school_project.wsgi.application'
 # Database Configuration (PostgreSQL with fallback to SQLite for local tests)
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
+    normalized_db_url = normalize_db_url(DATABASE_URL)
     DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
+        'default': dj_database_url.parse(
+            normalized_db_url,
             conn_max_age=600,
             conn_health_checks=True,
+            ssl_require=True,
         )
     }
 else:
