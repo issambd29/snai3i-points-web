@@ -4,7 +4,6 @@ import { BRANCH_OPTIONS, SPECIALTY_OPTIONS } from '../constants';
 import { Snai3iIcon } from './Snai3iIcon';
 import { launchCoinCelebration } from '../utils/celebration';
 import { AttendanceTracker } from './AttendanceTracker';
-import { StoreManagement } from './StoreManagement';
 import {
   Star,
   Coins,
@@ -20,7 +19,6 @@ import {
   Clock,
   ShieldCheck,
   Calendar,
-  ShoppingBag,
 } from 'lucide-react';
 
 export const TeacherDashboard = () => {
@@ -424,33 +422,9 @@ export const TeacherDashboard = () => {
             </span>
           )}
         </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === 'store' ? 'active' : ''}`}
-          onClick={() => setActiveTab('store')}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-        >
-          <ShoppingBag className="w-4 h-4 text-amber-500" /> Rewards Store
-          {(state?.orders || []).filter((o) => o.status === 'pending').length > 0 && (
-            <span
-              style={{
-                fontSize: '10px',
-                fontWeight: '800',
-                padding: '2px 6px',
-                borderRadius: '999px',
-                background: '#EF4444',
-                color: '#FFFFFF',
-              }}
-            >
-              {(state?.orders || []).filter((o) => o.status === 'pending').length}
-            </span>
-          )}
-        </button>
       </div>
 
-      {activeTab === 'store' ? (
-        <StoreManagement />
-      ) : activeTab === 'attendance' ? (
+      {activeTab === 'attendance' ? (
         <AttendanceTracker
           classroomId={activeClassroom?.id}
           classroomName={activeClassroom?.name || 'This Class'}

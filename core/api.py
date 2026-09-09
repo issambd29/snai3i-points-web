@@ -287,62 +287,65 @@ def api_get_app_data(request):
         pass
 
     products = []
-    try:
-        prod_qs = Product.objects.all().order_by('-is_available', 'id')
-        for p in prod_qs:
-            products.append({
-                'id': f'p-{p.id}',
-                'rawId': p.id,
-                'name': p.name,
-                'description': p.description or '',
-                'priceCoins': p.price_coins,
-                'price': p.price_coins,
-                'stock': p.stock,
-                'category': p.category or 'General',
-                'imageUrl': p.image_url or '',
-                'icon': p.icon or 'Gift',
-                'isAvailable': p.is_available,
-                'createdAt': p.created_at.isoformat() if p.created_at else None,
-                'updatedAt': p.updated_at.isoformat() if p.updated_at else None,
-            })
-    except Exception:
-        pass
+    is_teacher = (request.user.id in teacher_user_ids) and not request.user.is_superuser
+    if not is_teacher:
+        try:
+            prod_qs = Product.objects.all().order_by('-is_available', 'id')
+            for p in prod_qs:
+                products.append({
+                    'id': f'p-{p.id}',
+                    'rawId': p.id,
+                    'name': p.name,
+                    'description': p.description or '',
+                    'priceCoins': p.price_coins,
+                    'price': p.price_coins,
+                    'stock': p.stock,
+                    'category': p.category or 'General',
+                    'imageUrl': p.image_url or '',
+                    'icon': p.icon or 'Gift',
+                    'isAvailable': p.is_available,
+                    'createdAt': p.created_at.isoformat() if p.created_at else None,
+                    'updatedAt': p.updated_at.isoformat() if p.updated_at else None,
+                })
+        except Exception:
+            pass
 
     orders = []
-    try:
-        orders_qs = StoreOrder.objects.select_related('student', 'student__user', 'product').all().order_by('-created_at', '-id')
-        for o in orders_qs:
-            s_name = f"{o.student.user.first_name} {o.student.user.last_name}".strip() or o.student.user.username
-            c_name = 'Unassigned'
-            first_c = o.student.classroom_set.first()
-            if first_c:
-                c_name = first_c.name
+    if not is_teacher:
+        try:
+            orders_qs = StoreOrder.objects.select_related('student', 'student__user', 'product').all().order_by('-created_at', '-id')
+            for o in orders_qs:
+                s_name = f"{o.student.user.first_name} {o.student.user.last_name}".strip() or o.student.user.username
+                c_name = 'Unassigned'
+                first_c = o.student.classroom_set.first()
+                if first_c:
+                    c_name = first_c.name
 
-            orders.append({
-                'id': f'ord-{o.id}',
-                'rawId': o.id,
-                'studentId': f's-{o.student_id}',
-                'studentRawId': o.student_id,
-                'studentName': s_name,
-                'studentEmail': o.student.user.email,
-                'studentClass': c_name,
-                'productId': f'p-{o.product_id}' if o.product_id else None,
-                'productRawId': o.product_id,
-                'productName': o.product_name,
-                'productImage': o.product.image_url if o.product else '',
-                'productIcon': o.product.icon if o.product else 'Gift',
-                'costCoins': o.cost_coins,
-                'pricePaid': o.cost_coins,
-                'status': o.status or 'pending',
-                'notes': o.notes or '',
-                'rejectionReason': o.rejection_reason or '',
-                'refunded': o.refunded,
-                'createdAt': o.created_at.isoformat() if o.created_at else None,
-                'completedAt': o.completed_at.isoformat() if o.completed_at else None,
-                'updatedAt': o.updated_at.isoformat() if o.updated_at else None,
-            })
-    except Exception:
-        pass
+                orders.append({
+                    'id': f'ord-{o.id}',
+                    'rawId': o.id,
+                    'studentId': f's-{o.student_id}',
+                    'studentRawId': o.student_id,
+                    'studentName': s_name,
+                    'studentEmail': o.student.user.email,
+                    'studentClass': c_name,
+                    'productId': f'p-{o.product_id}' if o.product_id else None,
+                    'productRawId': o.product_id,
+                    'productName': o.product_name,
+                    'productImage': o.product.image_url if o.product else '',
+                    'productIcon': o.product.icon if o.product else 'Gift',
+                    'costCoins': o.cost_coins,
+                    'pricePaid': o.cost_coins,
+                    'status': o.status or 'pending',
+                    'notes': o.notes or '',
+                    'rejectionReason': o.rejection_reason or '',
+                    'refunded': o.refunded,
+                    'createdAt': o.created_at.isoformat() if o.created_at else None,
+                    'completedAt': o.completed_at.isoformat() if o.completed_at else None,
+                    'updatedAt': o.updated_at.isoformat() if o.updated_at else None,
+                })
+        except Exception:
+            pass
 
     return JsonResponse({
         'success': True,
@@ -843,6 +846,8 @@ def api_attendance_day(request):
 @csrf_exempt
 @require_auth
 def api_store_upload(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Only administrators can upload store images.'}, status=403)
     if request.method == 'POST' and request.FILES.get('image'):
         f = request.FILES['image']
         ext = os.path.splitext(f.name)[1].lower()
@@ -865,6 +870,10 @@ def api_store_upload(request):
 @csrf_exempt
 @require_auth
 def api_store_products(request, product_id=None):
+    is_teacher = Teacher.objects.filter(user=request.user).exists() and not request.user.is_superuser
+    if is_teacher:
+        return JsonResponse({'success': False, 'error': 'Teachers do not have access to the store.'}, status=403)
+
     if request.method == 'GET':
         available_only = request.GET.get('availableOnly') == 'true'
         qs = Product.objects.all().order_by('-is_available', 'id')
@@ -890,6 +899,8 @@ def api_store_products(request, product_id=None):
         return JsonResponse({'success': True, 'products': products})
 
     elif request.method == 'POST':
+        if not request.user.is_superuser:
+            return JsonResponse({'success': False, 'error': 'Only administrators can add store products.'}, status=403)
         data = parse_json(request)
         name = str(data.get('name', '')).strip()
         if not name:
@@ -930,6 +941,8 @@ def api_store_products(request, product_id=None):
         })
 
     elif request.method == 'PUT':
+        if not request.user.is_superuser:
+            return JsonResponse({'success': False, 'error': 'Only administrators can modify store products.'}, status=403)
         raw_id = int(str(product_id).replace('p-', '')) if product_id else 0
         prod = Product.objects.filter(id=raw_id).first()
         if not prod:
@@ -971,6 +984,8 @@ def api_store_products(request, product_id=None):
         })
 
     elif request.method == 'DELETE':
+        if not request.user.is_superuser:
+            return JsonResponse({'success': False, 'error': 'Only administrators can delete store products.'}, status=403)
         raw_id = int(str(product_id).replace('p-', '')) if product_id else 0
         prod = Product.objects.filter(id=raw_id).first()
         if not prod:
@@ -1055,6 +1070,10 @@ def api_store_purchase(request):
 @csrf_exempt
 @require_auth
 def api_store_orders(request, order_id=None):
+    is_teacher = Teacher.objects.filter(user=request.user).exists() and not request.user.is_superuser
+    if is_teacher:
+        return JsonResponse({'success': False, 'error': 'Teachers do not have access to store orders.'}, status=403)
+
     if request.method == 'GET':
         student_id = request.GET.get('studentId')
         qs = StoreOrder.objects.select_related('student', 'student__user', 'product').all().order_by('-created_at', '-id')
@@ -1096,6 +1115,8 @@ def api_store_orders(request, order_id=None):
         return JsonResponse({'success': True, 'orders': orders})
 
     if request.method == 'DELETE':
+        if not request.user.is_superuser:
+            return JsonResponse({'success': False, 'error': 'Only administrators can remove store orders.'}, status=403)
         if not order_id:
             return JsonResponse({'success': False, 'error': 'Order id is required.'}, status=400)
 
@@ -1128,6 +1149,8 @@ def api_store_orders(request, order_id=None):
 @csrf_exempt
 @require_auth
 def api_store_order_status(request, order_id):
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Only administrators can update store orders.'}, status=403)
     if request.method not in ['PUT', 'POST']:
         return JsonResponse({'success': False, 'error': 'PUT or POST method required'}, status=405)
 
