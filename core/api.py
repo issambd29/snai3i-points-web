@@ -399,19 +399,37 @@ def api_subtract_points(request, student_id):
 
     data = parse_json(request)
     raw_id = int(str(student_id).replace('s-', '').replace('u-', ''))
-    amount = Decimal(str(data.get('amount', 1)))
+    try:
+        amount = Decimal(str(data.get('amount', 1)))
+    except Exception:
+        amount = Decimal('1')
+
+    if amount <= 0:
+        return JsonResponse({'success': False, 'error': 'Amount must be greater than 0.'}, status=400)
 
     student = Student.objects.filter(id=raw_id).first() or Student.objects.filter(user_id=raw_id).first()
     if not student:
         return JsonResponse({'success': False, 'error': 'Student not found.'}, status=404)
 
+    if amount > student.points:
+        return JsonResponse({
+            'success': False,
+            'error': f'Cannot subtract more than current points ({float(student.points)}).'
+        }, status=400)
+
+    old_points = student.points
+    coins_before = int(old_points // 10)
     student.points = max(Decimal('0'), student.points - amount)
+    coins_after = int(student.points // 10)
+    lost_coins = max(0, coins_before - coins_after)
+    student.coins = max(0, student.coins - lost_coins)
     student.save()
 
     return JsonResponse({
         'success': True,
         'newPoints': float(student.points),
         'newCoins': student.coins,
+        'coinsLost': lost_coins,
     })
 
 

@@ -240,10 +240,20 @@ export const AppProvider = ({ children }) => {
       });
       if (res.ok) {
         const data = await res.json();
+        if (data.success && typeof data.newCoins === 'number') {
+          setState((prev) => ({
+            ...prev,
+            students: (prev.students || []).map((s) =>
+              s.id === studentId
+                ? { ...s, points: data.newPoints, coins: data.newCoins }
+                : s
+            ),
+          }));
+        }
         if (data.coinsEarned > 0 && newCoinsEarned === 0) {
           launchCoinCelebration(data.coinsEarned);
         }
-        fetchAppData(false);
+        await fetchAppData(false);
       }
     } catch (e) {
       console.error('Error syncing add points to PostgreSQL:', e);
@@ -297,12 +307,25 @@ export const AppProvider = ({ children }) => {
 
     // Persist to PostgreSQL backend
     try {
-      await fetch(`/api/students/${studentId}/points/subtract`, {
+      const res = await fetch(`/api/students/${studentId}/points/subtract`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: val }),
       });
-      fetchAppData(false);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && typeof data.newCoins === 'number') {
+          setState((prev) => ({
+            ...prev,
+            students: (prev.students || []).map((s) =>
+              s.id === studentId
+                ? { ...s, points: data.newPoints, coins: data.newCoins }
+                : s
+            ),
+          }));
+        }
+      }
+      await fetchAppData(false);
     } catch (e) {
       console.error('Error syncing subtract points to PostgreSQL:', e);
     }
