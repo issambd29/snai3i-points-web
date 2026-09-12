@@ -100,7 +100,7 @@ export const AppProvider = ({ children }) => {
               homework: data.homeworks || [],
               messages: data.messages || [],
               chatMessages: data.messages || [],
-              attendance: data.attendance || [],
+              attendance: data.attendance || data.attendances || [],
               products: data.products || [],
               orders: data.orders || [],
               currentUser: current,
@@ -724,11 +724,58 @@ export const AppProvider = ({ children }) => {
     return { success: true };
   };
 
+  // MESSAGES: REFRESH MESSAGES
+  const refreshMessages = useCallback(async (classroomId) => {
+    try {
+      const query = classroomId ? `?classroomId=${classroomId}` : '';
+      const res = await fetch(`/api/messages${query}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.messages)) {
+          setState((prev) => ({
+            ...prev,
+            messages: data.messages,
+            chatMessages: data.messages,
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn('Could not refresh messages:', e);
+    }
+  }, []);
+
   // MESSAGES: SEND MESSAGE
   const sendMessage = async (classroomId, body) => {
-    if (!body?.trim()) {
+    const text = (body || '').trim();
+    if (!text) {
       return { success: false, error: 'Message cannot be empty.' };
     }
+
+    const tempId = `temp-${Date.now()}`;
+    const user = state.currentUser;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const optimisticMsg = {
+      id: tempId,
+      classroomId: classroomId || 'c-1',
+      senderId: user?.id || 'u-unknown',
+      senderName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.name || user?.email || 'You',
+      senderRole: user?.role || 'student',
+      senderEmail: user?.email || '',
+      text: text,
+      body: text,
+      content: text,
+      timestamp: now.toISOString(),
+      createdAt: timeStr,
+    };
+
+    // Optimistic UI update for instant feedback
+    setState((prev) => ({
+      ...prev,
+      messages: [...(prev.messages || []), optimisticMsg],
+      chatMessages: [...(prev.chatMessages || []), optimisticMsg],
+    }));
 
     try {
       const res = await fetch('/api/messages', {
@@ -736,18 +783,42 @@ export const AppProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           classroomId,
-          senderId: state.currentUser?.id,
-          body: body.trim(),
+          senderId: user?.id,
+          body: text,
+          text: text,
+          content: text,
         }),
       });
       const data = await res.json();
-      if (data.success) {
-        await fetchAppData(false);
-        return { success: true };
+      if (data.success && data.message) {
+        setState((prev) => {
+          const currentList = prev.messages || [];
+          const updated = currentList.map((m) => (m.id === tempId ? data.message : m));
+          if (!updated.some((m) => m.id === data.message.id)) {
+            updated.push(data.message);
+          }
+          return {
+            ...prev,
+            messages: updated,
+            chatMessages: updated,
+          };
+        });
+        return { success: true, message: data.message };
       } else {
+        // Rollback optimistic message if failed
+        setState((prev) => ({
+          ...prev,
+          messages: (prev.messages || []).filter((m) => m.id !== tempId),
+          chatMessages: (prev.chatMessages || []).filter((m) => m.id !== tempId),
+        }));
         return { success: false, error: data.error || 'Failed to send message.' };
       }
     } catch (e) {
+      setState((prev) => ({
+        ...prev,
+        messages: (prev.messages || []).filter((m) => m.id !== tempId),
+        chatMessages: (prev.chatMessages || []).filter((m) => m.id !== tempId),
+      }));
       return { success: false, error: e.message };
     }
   };
@@ -758,6 +829,11 @@ export const AppProvider = ({ children }) => {
       return { success: false, error: 'Classroom and Student IDs are required.' };
     }
     const cleanDate = date || new Date().toISOString().split('T')[0];
+    const normClassId = String(classroomId).startsWith('c-') ? String(classroomId) : `c-${classroomId}`;
+    const rawClassId = String(classroomId).replace(/^c-/, '');
+    const normStudentId = String(studentId).startsWith('s-') ? String(studentId) : `s-${studentId}`;
+    const rawStudentId = String(studentId).replace(/^s-/, '');
+
     const markedBy = state.currentUser
       ? `${state.currentUser.firstName || ''} ${state.currentUser.lastName || ''}`.trim() || state.currentUser.email
       : 'Teacher';
@@ -765,23 +841,24 @@ export const AppProvider = ({ children }) => {
     // Optimistic UI update
     setState((prev) => {
       const existingRecords = prev.attendance || [];
+      const matchFilter = (a) => {
+        const aClass = String(a.classroomId || '').replace(/^c-/, '');
+        const aStudent = String(a.studentId || '').replace(/^s-/, '');
+        return aClass === rawClassId && aStudent === rawStudentId && a.date === cleanDate;
+      };
+
       if (!status || status === 'unmarked') {
         return {
           ...prev,
-          attendance: existingRecords.filter(
-            (a) => !(a.classroomId === classroomId && a.studentId === studentId && a.date === cleanDate)
-          ),
+          attendance: existingRecords.filter((a) => !matchFilter(a)),
         };
       }
 
-      const matchIndex = existingRecords.findIndex(
-        (a) => a.classroomId === classroomId && a.studentId === studentId && a.date === cleanDate
-      );
-
+      const matchIndex = existingRecords.findIndex(matchFilter);
       const record = {
-        id: `att-${classroomId}-${studentId}-${cleanDate}`,
-        classroomId,
-        studentId,
+        id: `att-${normClassId}-${normStudentId}-${cleanDate}`,
+        classroomId: normClassId,
+        studentId: normStudentId,
         date: cleanDate,
         status,
         note: note || '',
@@ -804,17 +881,25 @@ export const AppProvider = ({ children }) => {
     });
 
     try {
-      await fetch('/api/attendance', {
+      const res = await fetch('/api/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classroomId, studentId, date: cleanDate, status, note, markedBy }),
+        body: JSON.stringify({
+          classroomId: normClassId,
+          studentId: normStudentId,
+          date: cleanDate,
+          status,
+          note,
+          markedBy,
+        }),
       });
+      const data = await res.json();
       fetchAppData(false);
+      return data;
     } catch (e) {
       console.error('Error saving attendance to PostgreSQL:', e);
+      return { success: false, error: e?.message };
     }
-
-    return { success: true };
   };
 
   // ATTENDANCE: BULK MARK ATTENDANCE
@@ -823,36 +908,47 @@ export const AppProvider = ({ children }) => {
       return { success: false, error: 'Classroom ID is required.' };
     }
     const cleanDate = date || new Date().toISOString().split('T')[0];
+    const normClassId = String(classroomId).startsWith('c-') ? String(classroomId) : `c-${classroomId}`;
+    const rawClassId = String(classroomId).replace(/^c-/, '');
     const markedBy = state.currentUser
       ? `${state.currentUser.firstName || ''} ${state.currentUser.lastName || ''}`.trim() || state.currentUser.email
       : 'Teacher';
 
-    const classroom = (state.classrooms || []).find((c) => c.id === classroomId);
-    const targetStudentIds =
+    const classroom = (state.classrooms || []).find(
+      (c) => c.id === classroomId || String(c.id).replace(/^c-/, '') === rawClassId
+    );
+    const targetStudentIds = (
       studentIds ||
       (state.students || [])
-        .filter((s) => s.classroomId === classroomId || classroom?.studentIds?.includes(s.id))
-        .map((s) => s.id);
+        .filter((s) => {
+          const sClass = String(s.classroomId || '').replace(/^c-/, '');
+          return sClass === rawClassId || classroom?.studentIds?.includes(s.id);
+        })
+        .map((s) => s.id)
+    ).map((id) => (String(id).startsWith('s-') ? String(id) : `s-${id}`));
+
+    const targetRawIds = targetStudentIds.map((id) => String(id).replace(/^s-/, ''));
 
     // Optimistic UI update
     setState((prev) => {
       const existing = prev.attendance || [];
+      const isTarget = (a) => {
+        const aClass = String(a.classroomId || '').replace(/^c-/, '');
+        const aStudent = String(a.studentId || '').replace(/^s-/, '');
+        return aClass === rawClassId && a.date === cleanDate && targetRawIds.includes(aStudent);
+      };
+
       if (!status || status === 'unmarked') {
         return {
           ...prev,
-          attendance: existing.filter(
-            (a) => !(a.classroomId === classroomId && a.date === cleanDate && targetStudentIds.includes(a.studentId))
-          ),
+          attendance: existing.filter((a) => !isTarget(a)),
         };
       }
 
-      const withoutTargets = existing.filter(
-        (a) => !(a.classroomId === classroomId && a.date === cleanDate && targetStudentIds.includes(a.studentId))
-      );
-
+      const withoutTargets = existing.filter((a) => !isTarget(a));
       const newRecords = targetStudentIds.map((sId) => ({
-        id: `att-${classroomId}-${sId}-${cleanDate}`,
-        classroomId,
+        id: `att-${normClassId}-${sId}-${cleanDate}`,
+        classroomId: normClassId,
         studentId: sId,
         date: cleanDate,
         status,
@@ -872,10 +968,11 @@ export const AppProvider = ({ children }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          classroomId,
+          classroomId: normClassId,
           date: cleanDate,
           status,
           studentIds: targetStudentIds,
+          records: targetStudentIds.map((sId) => ({ studentId: sId, status })),
           markedBy,
         }),
       });
@@ -1283,6 +1380,7 @@ export const AppProvider = ({ children }) => {
         clearDayAttendance,
         sendMessage,
         sendChatMessage: sendMessage,
+        refreshMessages,
         resetData,
         // Store actions
         purchaseProduct,

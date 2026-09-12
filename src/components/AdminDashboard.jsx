@@ -3,6 +3,8 @@ import { useApp } from '../context/AppContext';
 import { BRANCH_OPTIONS, SPECIALTY_OPTIONS } from '../constants';
 import { launchCoinCelebration } from '../utils/celebration';
 import { StoreManagement } from './StoreManagement';
+import { Snai3iIcon } from './Snai3iIcon';
+import { ChatPanel } from './ChatPanel';
 import {
   Users,
   GraduationCap,
@@ -40,6 +42,7 @@ export const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('students');
   const [searchTerm, setSearchTerm] = useState('');
   const [classroomFilter, setClassroomFilter] = useState('ALL');
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Per-row point inputs
   const [addAmounts, setAddAmounts] = useState({});
@@ -1931,6 +1934,23 @@ export const AdminDashboard = () => {
           </form>
         </div>
       </div>
+
+      {/* FLOATING CHAT FAB */}
+      <button
+        className="chat-fab"
+        onClick={() => setIsChatOpen(!isChatOpen)}
+        title="Open class discussion"
+        aria-label="Open class discussion"
+      >
+        <Snai3iIcon className="w-8 h-8" fill="#ffffff" />
+      </button>
+
+      {/* CHAT PANEL */}
+      <ChatPanel
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        availableClassrooms={state.classrooms || []}
+      />
 
       {/* TOAST NOTIFICATION */}
       {toast && (

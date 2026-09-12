@@ -39,14 +39,19 @@ export const AttendanceTracker = ({
   const dayAttendanceMap = useMemo(() => {
     const map = {};
     const normClassId = String(classroomId || '').replace(/^c-/, '');
-    attendance
+    (attendance || [])
       .filter((a) => {
         const aClassId = String(a.classroomId || '').replace(/^c-/, '');
         const isMatch = !classroomId || aClassId === normClassId || a.classroomId === classroomId;
         return isMatch && a.date === selectedDate;
       })
       .forEach((a) => {
+        const rawSid = String(a.studentId || '').replace(/^s-/, '');
         map[a.studentId] = a;
+        if (rawSid) {
+          map[rawSid] = a;
+          map[`s-${rawSid}`] = a;
+        }
       });
     return map;
   }, [attendance, classroomId, selectedDate]);
@@ -55,17 +60,26 @@ export const AttendanceTracker = ({
   const studentStatsMap = useMemo(() => {
     const map = {};
     const normClassId = String(classroomId || '').replace(/^c-/, '');
-    const classRecords = attendance.filter((a) => {
+    const classRecords = (attendance || []).filter((a) => {
       const aClassId = String(a.classroomId || '').replace(/^c-/, '');
       return !classroomId || aClassId === normClassId || a.classroomId === classroomId;
     });
 
-    students.forEach((s) => {
-      const studentRecords = classRecords.filter((a) => a.studentId === s.id);
+    (students || []).forEach((s) => {
+      const sRawId = String(s.id || '').replace(/^s-/, '');
+      const studentRecords = classRecords.filter((a) => {
+        const aRawId = String(a.studentId || '').replace(/^s-/, '');
+        return a.studentId === s.id || (aRawId && aRawId === sRawId);
+      });
       const totalRecorded = studentRecords.length;
       const presentCount = studentRecords.filter((a) => a.status === 'present' || a.status === 'late').length;
       const pct = totalRecorded > 0 ? Math.round((presentCount / totalRecorded) * 100) : 100;
-      map[s.id] = { totalRecorded, presentCount, pct };
+      const statObj = { totalRecorded, presentCount, pct };
+      map[s.id] = statObj;
+      if (sRawId) {
+        map[sRawId] = statObj;
+        map[`s-${sRawId}`] = statObj;
+      }
     });
 
     return map;
@@ -77,8 +91,9 @@ export const AttendanceTracker = ({
     let absent = 0;
     let unmarked = 0;
 
-    students.forEach((s) => {
-      const rec = dayAttendanceMap[s.id];
+    (students || []).forEach((s) => {
+      const sRawId = String(s.id || '').replace(/^s-/, '');
+      const rec = dayAttendanceMap[s.id] || dayAttendanceMap[sRawId] || dayAttendanceMap[`s-${sRawId}`];
       const status = rec?.status;
       if (status === 'present' || status === 'late') {
         present++;
@@ -94,15 +109,19 @@ export const AttendanceTracker = ({
 
   // Actions
   const handleSetStatus = (studentId, status) => {
-    const current = dayAttendanceMap[studentId]?.status;
-    const currentNote = dayAttendanceMap[studentId]?.note || '';
+    const sRawId = String(studentId || '').replace(/^s-/, '');
+    const rec = dayAttendanceMap[studentId] || dayAttendanceMap[sRawId] || dayAttendanceMap[`s-${sRawId}`];
+    const current = rec?.status;
+    const currentNote = rec?.note || '';
     // Clicking the current status or explicitly 'unmarked' clears back to unmarked
     const newStatus = (current === status || status === 'unmarked') ? 'unmarked' : status;
     onSetAttendance(classroomId, studentId, selectedDate, newStatus, currentNote);
   };
 
   const handleSaveNote = (studentId) => {
-    const currentStatus = dayAttendanceMap[studentId]?.status || 'present';
+    const sRawId = String(studentId || '').replace(/^s-/, '');
+    const rec = dayAttendanceMap[studentId] || dayAttendanceMap[sRawId] || dayAttendanceMap[`s-${sRawId}`];
+    const currentStatus = rec?.status || 'present';
     onSetAttendance(classroomId, studentId, selectedDate, currentStatus, tempNote.trim());
     setEditingNoteStudentId(null);
     setTempNote('');
@@ -408,7 +427,8 @@ export const AttendanceTracker = ({
           </div>
         ) : (
           students.map((student) => {
-            const rec = dayAttendanceMap[student.id];
+            const sRawId = String(student.id || '').replace(/^s-/, '');
+            const rec = dayAttendanceMap[student.id] || dayAttendanceMap[sRawId] || dayAttendanceMap[`s-${sRawId}`];
             const rawStatus = rec?.status;
             // Treat 'late' as present and 'excused' as absent if legacy data exists
             const currentStatus = (rawStatus === 'present' || rawStatus === 'late')

@@ -4,6 +4,7 @@ import { Snai3iIcon } from './Snai3iIcon';
 import { launchCoinCelebration } from '../utils/celebration';
 import { Star, Coins, Trophy, BookOpen, UserCheck, ShoppingBag, LayoutDashboard } from 'lucide-react';
 import { StudentStore } from './StudentStore';
+import { ChatPanel } from './ChatPanel';
 
 export const StudentDashboard = () => {
   const { state, currentUser, sendChatMessage } = useApp();
@@ -43,9 +44,13 @@ export const StudentDashboard = () => {
 
   // Attendance metrics (Present vs Absent)
   const todayStr = new Date().toISOString().split('T')[0];
-  const allStudentAtt = (state?.attendance || []).filter((a) => a.studentId === student?.id);
+  const studentRawId = String(student?.id || '').replace(/^s-/, '');
+  const allStudentAtt = (state?.attendance || []).filter((a) => {
+    const aRawId = String(a.studentId || '').replace(/^s-/, '');
+    return a.studentId === student?.id || (aRawId && aRawId === studentRawId);
+  });
   const totalAttSessions = allStudentAtt.length;
-  const presentSessions = allStudentAtt.filter((a) => a.status === 'present').length;
+  const presentSessions = allStudentAtt.filter((a) => a.status === 'present' || a.status === 'late').length;
   const attRate = totalAttSessions > 0 ? Math.round((presentSessions / totalAttSessions) * 100) : 100;
   const todayAtt = allStudentAtt.find((a) => a.date === todayStr);
 
@@ -333,48 +338,12 @@ export const StudentDashboard = () => {
         <Snai3iIcon className="w-8 h-8" fill="#ffffff" />
       </button>
 
-      {/* SLIDE-UP / SIDE CHAT PANEL */}
-      <div className={`chat-panel ${isChatPanelOpen ? 'open' : ''}`}>
-        <div className="collab-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <div className="collab-heading">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2>Class chat</h2>
-              <span className="collab-badge">Live</span>
-            </div>
-            <button
-              className="chat-close"
-              onClick={() => setIsChatPanelOpen(false)}
-            >
-              ×
-            </button>
-          </div>
-          <div className="chat-list" style={{ flex: 1, overflowY: 'auto' }}>
-            {classroomMessages.length === 0 ? (
-              <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '40px' }}>
-                No messages yet. Send a note to the class!
-              </p>
-            ) : (
-              classroomMessages.map((msg) => (
-                <div key={msg.id} className="chat-message">
-                  <strong>{msg.senderName}: </strong>
-                  <span>{msg.content || msg.body}</span>
-                </div>
-              ))
-            )}
-          </div>
-          <form className="chat-form" onSubmit={handleInlineChatSend}>
-            <input
-              type="text"
-              placeholder="Write a message…"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-            />
-            <button type="submit" className="small-action">
-              Send
-            </button>
-          </form>
-        </div>
-      </div>
+      {/* CHAT PANEL */}
+      <ChatPanel
+        classroomId={classroom?.id}
+        isOpen={isChatPanelOpen}
+        onClose={() => setIsChatPanelOpen(false)}
+      />
       </>
       )}
 

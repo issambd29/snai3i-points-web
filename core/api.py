@@ -266,7 +266,10 @@ def api_get_app_data(request):
             'senderRole': sender_role,
             'senderEmail': m.sender.email,
             'text': m.body,
+            'body': m.body,
+            'content': m.body,
             'timestamp': m.created_at.isoformat() if m.created_at else None,
+            'createdAt': m.created_at.strftime('%b %d, %H:%M') if m.created_at else '',
         })
 
     attendances = []
@@ -355,6 +358,7 @@ def api_get_app_data(request):
         'students': students,
         'homeworks': homeworks,
         'messages': messages,
+        'attendance': attendances,
         'attendances': attendances,
         'products': products,
         'orders': orders,
@@ -751,35 +755,99 @@ def api_homework(request, homework_id=None):
 @csrf_exempt
 @require_auth
 def api_messages(request):
-    if request.method == 'POST':
+    if request.method == 'GET':
+        class_id_param = request.GET.get('classroomId') or request.GET.get('classroom_id')
+        messages_qs = ChatMessage.objects.select_related('classroom', 'sender').all().order_by('created_at')
+        if class_id_param:
+            try:
+                raw_c_id = int(str(class_id_param).replace('c-', ''))
+                messages_qs = messages_qs.filter(classroom_id=raw_c_id)
+            except ValueError:
+                pass
+
+        teacher_user_ids = set(Teacher.objects.values_list('user_id', flat=True))
+        serialized = []
+        for m in messages_qs:
+            sender_name = f"{m.sender.first_name} {m.sender.last_name}".strip() or m.sender.username
+            sender_role = 'admin' if m.sender.is_superuser else ('teacher' if m.sender.id in teacher_user_ids else 'student')
+            serialized.append({
+                'id': f'm-{m.id}',
+                'rawId': m.id,
+                'classroomId': f'c-{m.classroom_id}',
+                'senderId': f'u-{m.sender_id}',
+                'senderName': sender_name,
+                'senderRole': sender_role,
+                'senderEmail': m.sender.email,
+                'text': m.body,
+                'body': m.body,
+                'content': m.body,
+                'timestamp': m.created_at.isoformat() if m.created_at else None,
+                'createdAt': m.created_at.strftime('%b %d, %H:%M') if m.created_at else '',
+            })
+        return JsonResponse({'success': True, 'messages': serialized})
+
+    elif request.method == 'POST':
         data = parse_json(request)
-        class_id = int(str(data.get('classroomId', '1')).replace('c-', ''))
-        sender_user_id = int(str(data.get('senderId', '1')).replace('u-', ''))
-        body = data.get('text', '').strip()
+        raw_class_id = str(data.get('classroomId') or data.get('classroom_id') or '1')
+        try:
+            class_id = int(raw_class_id.replace('c-', ''))
+        except ValueError:
+            class_id = 1
 
-        c = Classroom.objects.filter(id=class_id).first()
-        u = User.objects.filter(id=sender_user_id).first()
+        c = Classroom.objects.filter(id=class_id).first() or Classroom.objects.first()
+        if not c:
+            return JsonResponse({'success': False, 'error': 'No classroom found to send message to.'}, status=404)
 
-        if not c or not u or not body:
-            return JsonResponse({'success': False, 'error': 'Classroom, sender, and text are required.'}, status=400)
+        sender = None
+        sender_id_val = data.get('senderId') or data.get('sender_id')
+        if sender_id_val:
+            try:
+                raw_uid = int(str(sender_id_val).replace('u-', '').replace('s-', '').replace('t-', ''))
+                sender = User.objects.filter(id=raw_uid).first()
+            except ValueError:
+                pass
+
+        if not sender and request.user.is_authenticated:
+            sender = request.user
+
+        if not sender:
+            return JsonResponse({'success': False, 'error': 'Valid sender user is required.'}, status=400)
+
+        body = (data.get('body') or data.get('text') or data.get('content') or '').strip()
+        if not body:
+            return JsonResponse({'success': False, 'error': 'Message text cannot be empty.'}, status=400)
 
         msg = ChatMessage.objects.create(
             classroom=c,
-            sender=u,
+            sender=sender,
             body=body,
         )
+
+        sender_role = 'student'
+        if sender.is_superuser:
+            sender_role = 'admin'
+        elif Teacher.objects.filter(user=sender).exists():
+            sender_role = 'teacher'
+        elif Student.objects.filter(user=sender).exists():
+            sender_role = 'student'
+
+        sender_name = f"{sender.first_name} {sender.last_name}".strip() or sender.username
+
         return JsonResponse({
             'success': True,
             'message': {
                 'id': f'm-{msg.id}',
                 'rawId': msg.id,
                 'classroomId': f'c-{c.id}',
-                'senderId': f'u-{u.id}',
-                'senderName': f"{u.first_name} {u.last_name}".strip() or u.username,
-                'senderRole': 'admin' if u.is_superuser else 'teacher',
-                'senderEmail': u.email,
+                'senderId': f'u-{sender.id}',
+                'senderName': sender_name,
+                'senderRole': sender_role,
+                'senderEmail': sender.email,
                 'text': msg.body,
+                'body': msg.body,
+                'content': msg.body,
                 'timestamp': msg.created_at.isoformat(),
+                'createdAt': msg.created_at.strftime('%b %d, %H:%M'),
             }
         })
 
@@ -789,12 +857,51 @@ def api_messages(request):
 @csrf_exempt
 @require_auth
 def api_attendance(request):
+    if request.method == 'GET':
+        class_id_param = request.GET.get('classroomId') or request.GET.get('classroom_id')
+        student_id_param = request.GET.get('studentId') or request.GET.get('student_id')
+        date_param = (request.GET.get('date') or '').strip()
+
+        qs = Attendance.objects.all().order_by('-date', 'id')
+        if class_id_param:
+            try:
+                qs = qs.filter(classroom_id=int(str(class_id_param).replace('c-', '')))
+            except ValueError:
+                pass
+        if student_id_param:
+            try:
+                qs = qs.filter(student_id=int(str(student_id_param).replace('s-', '')))
+            except ValueError:
+                pass
+        if date_param:
+            qs = qs.filter(date=date_param)
+
+        records = []
+        for a in qs:
+            records.append({
+                'id': f'att-{a.id}',
+                'rawId': a.id,
+                'classroomId': f'c-{a.classroom_id}',
+                'studentId': f's-{a.student_id}',
+                'date': a.date.isoformat() if hasattr(a.date, 'isoformat') else str(a.date or ''),
+                'status': a.status,
+                'note': a.note or '',
+                'markedBy': a.marked_by or '',
+            })
+        return JsonResponse({'success': True, 'attendance': records, 'attendances': records})
+
     if request.method == 'POST':
         data = parse_json(request)
-        c_id = int(str(data.get('classroomId', '1')).replace('c-', ''))
-        s_id = int(str(data.get('studentId', '1')).replace('s-', ''))
-        date_str = data.get('date', '').strip()
-        status = data.get('status', 'present')
+        c_id_raw = data.get('classroomId') or data.get('classroom_id') or '1'
+        s_id_raw = data.get('studentId') or data.get('student_id') or '1'
+        try:
+            c_id = int(str(c_id_raw).replace('c-', ''))
+            s_id = int(str(s_id_raw).replace('s-', ''))
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Invalid IDs'}, status=400)
+
+        date_str = (data.get('date') or '').strip()
+        status = (data.get('status') or 'present').strip().lower()
         note = data.get('note', '')
         marked_by = data.get('markedBy', '')
 
@@ -802,13 +909,47 @@ def api_attendance(request):
         s = Student.objects.filter(id=s_id).first()
 
         if c and s and date_str:
+            if status in ['unmarked', 'clear', 'deleted', 'none', '']:
+                Attendance.objects.filter(classroom=c, student=s, date=date_str).delete()
+                return JsonResponse({'success': True, 'action': 'deleted'})
+
             att, _ = Attendance.objects.update_or_create(
                 classroom=c,
                 student=s,
                 date=date_str,
                 defaults={'status': status, 'note': note, 'marked_by': marked_by}
             )
-            return JsonResponse({'success': True, 'attendanceId': f'att-{att.id}'})
+            date_val = att.date.isoformat() if hasattr(att.date, 'isoformat') else str(att.date or '')
+            return JsonResponse({
+                'success': True,
+                'attendanceId': f'att-{att.id}',
+                'attendance': {
+                    'id': f'att-{att.id}',
+                    'rawId': att.id,
+                    'classroomId': f'c-{att.classroom_id}',
+                    'studentId': f's-{att.student_id}',
+                    'date': date_val,
+                    'status': att.status,
+                    'note': att.note,
+                    'markedBy': att.marked_by,
+                }
+            })
+
+        return JsonResponse({'success': False, 'error': 'Invalid parameters'}, status=400)
+
+    if request.method == 'DELETE':
+        c_id_raw = request.GET.get('classroomId') or request.GET.get('classroom_id')
+        s_id_raw = request.GET.get('studentId') or request.GET.get('student_id')
+        date_str = (request.GET.get('date') or '').strip()
+
+        if c_id_raw and s_id_raw and date_str:
+            try:
+                c_id = int(str(c_id_raw).replace('c-', ''))
+                s_id = int(str(s_id_raw).replace('s-', ''))
+                Attendance.objects.filter(classroom_id=c_id, student_id=s_id, date=date_str).delete()
+                return JsonResponse({'success': True, 'action': 'deleted'})
+            except ValueError:
+                pass
 
         return JsonResponse({'success': False, 'error': 'Invalid parameters'}, status=400)
 
@@ -820,43 +961,97 @@ def api_attendance(request):
 def api_attendance_bulk(request):
     if request.method == 'POST':
         data = parse_json(request)
-        c_id = int(str(data.get('classroomId', '1')).replace('c-', ''))
-        date_str = data.get('date', '').strip()
-        records = data.get('records', [])
+        c_id_raw = data.get('classroomId') or data.get('classroom_id') or '1'
+        try:
+            c_id = int(str(c_id_raw).replace('c-', ''))
+        except ValueError:
+            c_id = 1
+
+        date_str = (data.get('date') or '').strip()
+        records = data.get('records')
+        student_ids = data.get('studentIds') or data.get('students')
+        default_status = (data.get('status') or 'present').strip().lower()
         marked_by = data.get('markedBy', '')
 
         c = Classroom.objects.filter(id=c_id).first()
-        if c and date_str and records:
+        if not c or not date_str:
+            return JsonResponse({'success': False, 'error': 'Classroom and valid date required'}, status=400)
+
+        updated_count = 0
+        if records and isinstance(records, list):
             for r in records:
-                s_id = int(str(r.get('studentId', '')).replace('s-', ''))
+                s_id_raw = r.get('studentId') or r.get('id')
+                if not s_id_raw:
+                    continue
+                try:
+                    s_id = int(str(s_id_raw).replace('s-', ''))
+                except ValueError:
+                    continue
                 s = Student.objects.filter(id=s_id).first()
                 if s:
-                    Attendance.objects.update_or_create(
-                        classroom=c,
-                        student=s,
-                        date=date_str,
-                        defaults={
-                            'status': r.get('status', 'present'),
-                            'note': r.get('note', ''),
-                            'marked_by': marked_by,
-                        }
-                    )
-            return JsonResponse({'success': True})
+                    st = (r.get('status') or default_status).strip().lower()
+                    if st in ['unmarked', 'clear', 'deleted', 'none', '']:
+                        Attendance.objects.filter(classroom=c, student=s, date=date_str).delete()
+                    else:
+                        Attendance.objects.update_or_create(
+                            classroom=c,
+                            student=s,
+                            date=date_str,
+                            defaults={
+                                'status': st,
+                                'note': r.get('note', ''),
+                                'marked_by': marked_by,
+                            }
+                        )
+                    updated_count += 1
+        elif student_ids and isinstance(student_ids, list):
+            for s_id_raw in student_ids:
+                try:
+                    s_id = int(str(s_id_raw).replace('s-', ''))
+                except ValueError:
+                    continue
+                s = Student.objects.filter(id=s_id).first()
+                if s:
+                    if default_status in ['unmarked', 'clear', 'deleted', 'none', '']:
+                        Attendance.objects.filter(classroom=c, student=s, date=date_str).delete()
+                    else:
+                        Attendance.objects.update_or_create(
+                            classroom=c,
+                            student=s,
+                            date=date_str,
+                            defaults={
+                                'status': default_status,
+                                'note': '',
+                                'marked_by': marked_by,
+                            }
+                        )
+                    updated_count += 1
 
-    return JsonResponse({'success': False, 'error': 'Invalid parameters'}, status=400)
+        return JsonResponse({'success': True, 'count': updated_count})
+
+    return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 
 
 @csrf_exempt
 @require_auth
 def api_attendance_day(request):
-    if request.method == 'DELETE':
-        c_id_raw = request.GET.get('classroomId', '')
-        date_str = request.GET.get('date', '').strip()
+    if request.method in ['DELETE', 'POST']:
+        data = parse_json(request) if request.body else {}
+        c_id_raw = request.GET.get('classroomId') or request.GET.get('classroom_id') or data.get('classroomId')
+        date_str = (request.GET.get('date') or data.get('date') or '').strip()
 
-        if c_id_raw and date_str:
-            c_id = int(str(c_id_raw).replace('c-', ''))
-            Attendance.objects.filter(classroom_id=c_id, date=date_str).delete()
-            return JsonResponse({'success': True})
+        if date_str:
+            qs = Attendance.objects.filter(date=date_str)
+            if c_id_raw:
+                try:
+                    c_id = int(str(c_id_raw).replace('c-', ''))
+                    qs = qs.filter(classroom_id=c_id)
+                except ValueError:
+                    pass
+            deleted_count, _ = qs.delete()
+            return JsonResponse({'success': True, 'deleted': deleted_count})
+
+        return JsonResponse({'success': False, 'error': 'Date is required'}, status=400)
 
     return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 

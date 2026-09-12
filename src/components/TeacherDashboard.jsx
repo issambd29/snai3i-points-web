@@ -4,6 +4,7 @@ import { BRANCH_OPTIONS, SPECIALTY_OPTIONS } from '../constants';
 import { Snai3iIcon } from './Snai3iIcon';
 import { launchCoinCelebration } from '../utils/celebration';
 import { AttendanceTracker } from './AttendanceTracker';
+import { ChatPanel } from './ChatPanel';
 import {
   Star,
   Coins,
@@ -323,11 +324,14 @@ export const TeacherDashboard = () => {
   );
 
   const todayStr = new Date().toISOString().split('T')[0];
-  const activeClassroomAttendance = (state.attendance || []).filter(
-    (a) => a.classroomId === activeClassroom?.id && a.date === todayStr
-  );
+  const activeClassRawId = String(activeClassroom?.id || '').replace(/^c-/, '');
+  const activeClassroomAttendance = (state.attendance || []).filter((a) => {
+    const aClassRawId = String(a.classroomId || '').replace(/^c-/, '');
+    const isSameClass = a.classroomId === activeClassroom?.id || (aClassRawId && aClassRawId === activeClassRawId);
+    return isSameClass && a.date === todayStr;
+  });
   const presentTodayCount = activeClassroomAttendance.filter(
-    (a) => a.status === 'present'
+    (a) => a.status === 'present' || a.status === 'late'
   ).length;
 
   return (
@@ -595,7 +599,11 @@ export const TeacherDashboard = () => {
                     : 'flash-sub'
                   : '';
 
-                const todayRecord = activeClassroomAttendance.find((a) => a.studentId === s.id);
+                const sRawId = String(s.id || '').replace(/^s-/, '');
+                const todayRecord = activeClassroomAttendance.find((a) => {
+                  const aRawId = String(a.studentId || '').replace(/^s-/, '');
+                  return a.studentId === s.id || (aRawId && aRawId === sRawId);
+                });
                 const todayStatus = todayRecord?.status;
 
                 return (
@@ -607,9 +615,25 @@ export const TeacherDashboard = () => {
 
                     {/* STUDENT NAME & CLASS/AGE */}
                     <div>
-                      <span className="player-name">
-                        {s.user.firstName} {s.user.lastName}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span className="player-name">
+                          {s.user.firstName} {s.user.lastName}
+                        </span>
+                        {todayStatus && (
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: '700',
+                              padding: '2px 7px',
+                              borderRadius: '999px',
+                              background: (todayStatus === 'present' || todayStatus === 'late') ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                              color: (todayStatus === 'present' || todayStatus === 'late') ? '#15803d' : '#b91c1c',
+                            }}
+                          >
+                            {(todayStatus === 'present' || todayStatus === 'late') ? 'Present' : 'Absent'}
+                          </span>
+                        )}
+                      </div>
                       <div className="player-age">
                         Class: {activeClassroom?.name || 'Class A'}
                         {s.age ? ` · Age ${s.age}` : ''}
@@ -705,54 +729,18 @@ export const TeacherDashboard = () => {
         className="chat-fab"
         onClick={() => setIsChatOpen(!isChatOpen)}
         title="Open class discussion"
+        aria-label="Open class discussion"
       >
         <Snai3iIcon className="w-8 h-8" fill="#ffffff" />
       </button>
 
-      {/* SLIDE-UP CHAT PANEL */}
-      <div className={`chat-panel ${isChatOpen ? 'open' : ''}`}>
-        <div className="collab-card">
-          <div className="collab-heading">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2>Class chat</h2>
-              <span className="collab-badge">Live</span>
-            </div>
-            <button
-              className="chat-close"
-              onClick={() => setIsChatOpen(false)}
-            >
-              ×
-            </button>
-          </div>
-
-          <div className="chat-list">
-            {classroomMessages.length === 0 ? (
-              <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '40px' }}>
-                No messages yet. Send a note to the class!
-              </p>
-            ) : (
-              classroomMessages.map((msg) => (
-                <div key={msg.id} className="chat-message">
-                  <strong>{msg.senderName}: </strong>
-                  <span>{msg.content}</span>
-                </div>
-              ))
-            )}
-          </div>
-
-          <form className="chat-form" onSubmit={handleSendChat}>
-            <input
-              type="text"
-              placeholder="Write a message…"
-              value={chatMessageText}
-              onChange={(e) => setChatMessageText(e.target.value)}
-            />
-            <button type="submit" className="small-action">
-              Send
-            </button>
-          </form>
-        </div>
-      </div>
+      {/* CHAT PANEL */}
+      <ChatPanel
+        classroomId={activeClassroom?.id}
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        availableClassrooms={availableTeacherClassrooms}
+      />
 
       {/* TOAST WRAPPER */}
       {toast && (
