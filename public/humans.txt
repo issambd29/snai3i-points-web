@@ -1,0 +1,10 @@
+/* TEAM */
+Platform: Snai3i Points Tracker (منصة نقاط صنايعي)
+Contact: badaouiissam660@gmail.com
+Location: Global
+
+/* SITE */
+Standards: HTML5, CSS3, ES6+, Schema.org
+Software: React, Vite, Tailwind CSS, Django, PostgreSQL
+Language: English, Arabic (صنايعي)
+Doctype: HTML5
